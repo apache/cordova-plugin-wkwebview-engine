@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+    xmlns:rim="http://www.blackberry.com/ns/widgets"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="org.apache.cordova.labs.wkwebviewengine"
+    version="0.1.0">
+    <name>Cordova WKWebView Engine</name>
+    <description>Cordova WKWebView Engine Plugin</description>
+    <license>Apache 2.0</license>
+    <keywords>cordova,wkwebview,webview</keywords>
+
+	<engines>
+		<engine name="cordova" version=">3.7.0" />
+	</engines>
+    
+    <!-- this plugin will be moved to labs soon -->
+    <dependency id="io.shaz.plugin.cordova-local-webserver" url="https://github.com/shazron/CordovaLocalWebServer.git" version=">=2.1.0" />
+
+    <!-- ios -->
+    <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+            <feature name="CDVWKWebViewEngine">
+                <param name="ios-package" value="CDVWKWebViewEngine" />
+            </feature>
+            <preference name="CordovaWebViewEngine" value="CDVWKWebViewEngine" />
+        </config-file>
+
+        <framework src="WebKit.framework" weak="true" />
+
+        <header-file src="src/ios/CDVWKWebViewEngine.h" />
+        <source-file src="src/ios/CDVWKWebViewEngine.m" />
+        <header-file src="src/ios/CDVWKWebViewUIDelegate.h" />
+        <source-file src="src/ios/CDVWKWebViewUIDelegate.m" />
+        
+    </platform>
+
+</plugin>
