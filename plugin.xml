@@ -9,13 +9,13 @@
     <description>Cordova WKWebView Engine Plugin</description>
     <license>Apache 2.0</license>
     <keywords>cordova,wkwebview,webview</keywords>
+    <repo>https://git-wip-us.apache.org/repos/asf/cordova-plugins.git</repo>
 
 	<engines>
 		<engine name="cordova" version=">3.7.0" />
 	</engines>
     
-    <!-- this plugin will be moved to labs soon -->
-    <dependency id="io.shaz.plugin.cordova-local-webserver" url="https://github.com/shazron/CordovaLocalWebServer.git" version=">=2.1.0" />
+    <dependency id="org.apache.cordova.labs.local-webserver" url="https://git-wip-us.apache.org/repos/asf/cordova-plugins.git#master:local-webserver" version=">=2.1.0" />
 
     <!-- ios -->
     <platform name="ios">
