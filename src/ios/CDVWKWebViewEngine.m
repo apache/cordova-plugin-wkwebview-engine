@@ -42,6 +42,9 @@
 {
     self = [super init];
     if (self) {
+        if (!IsAtLeastiOSVersion(@"8.0")) {
+            return nil;
+        }
         self.uiDelegate = [[CDVWKWebViewUIDelegate alloc] initWithTitle:[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"]];
 
         WKUserContentController* userContentController = [[WKUserContentController alloc] init];
