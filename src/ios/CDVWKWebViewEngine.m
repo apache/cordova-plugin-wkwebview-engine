@@ -86,22 +86,25 @@
     [self updateSettings:self.commandDelegate.settings];
 }
 
-// We implement this here because certain versions of iOS 8 do not implement this
-// in WKWebView, so we need to test for this during runtime.
-// It is speculated that this selector will be available in iOS 8.2 for WKWebView
-- (void)loadFileURL:(NSURL*)url allowingReadAccessToURL:(NSURL*)readAccessURL
+- (id)loadRequest:(NSURLRequest*)request
 {
-    SEL wk_sel = @selector(loadFileURL:allowingReadAccessToURL:);
-    __weak CDVWKWebViewEngine* weakSelf = self;
+    SEL wk_sel = NSSelectorFromString(@"loadFileURL:allowingReadAccessToURL:");
 
-    // UIKit operations have to be on the main thread. This method does not need to be synchronous
-    dispatch_async(dispatch_get_main_queue(), ^{
-        if ([_engineWebView respondsToSelector:wk_sel] && [[url scheme] isEqualToString:@"file"]) {
-            ((id (*)(id, SEL, id, id))objc_msgSend)(_engineWebView, wk_sel, url, readAccessURL);
-        } else {
-            [weakSelf loadRequest:[NSURLRequest requestWithURL:url]];
-        }
-    });
+    // the URL needs to be a file reference
+    NSURL* url = request.URL;
+    
+    if ([_engineWebView respondsToSelector:wk_sel] && [url isFileReferenceURL]) {
+        // allow the folder containing the file reference to be read as well
+        NSURL* readAccessUrl = [request.URL URLByDeletingLastPathComponent];
+        return ((id (*)(id, SEL, id, id))objc_msgSend)(_engineWebView, wk_sel, url, readAccessUrl);
+    } else {
+        return [(WKWebView*)_engineWebView loadRequest:request];
+    }
+}
+
+- (id)loadHTMLString:(NSString*)string baseURL:(NSURL*)baseURL
+{
+    return [(WKWebView*)_engineWebView loadHTMLString:string baseURL:baseURL];
 }
 
 - (void)updateSettings:(NSDictionary*)settings
