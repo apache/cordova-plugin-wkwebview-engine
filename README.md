@@ -7,7 +7,7 @@ This will also install the `Cordova Local WebServer` plugin.
 
 This plugin currently needs to use the `wkwebview` branch of `cordova-ios`. 
 
-To `beta test` this:
+To `alpha test` this:
 
 You may have to remove the cached wkwebview platform:
 
