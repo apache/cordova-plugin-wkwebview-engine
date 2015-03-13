@@ -4,7 +4,7 @@
     xmlns:rim="http://www.blackberry.com/ns/widgets"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="org.apache.cordova.labs.wkwebviewengine"
-    version="0.1.0">
+    version="0.2.0">
     <name>Cordova WKWebView Engine</name>
     <description>Cordova WKWebView Engine Plugin</description>
     <license>Apache 2.0</license>
@@ -12,7 +12,7 @@
     <repo>https://git-wip-us.apache.org/repos/asf/cordova-plugins.git</repo>
 
 	<engines>
-		<engine name="cordova" version=">3.7.0" />
+		<engine name="cordova" version=">=4.0.0" />
 	</engines>
     
     <dependency id="org.apache.cordova.labs.local-webserver" url="https://git-wip-us.apache.org/repos/asf/cordova-plugins.git#master:local-webserver" version=">=2.1.0" />
