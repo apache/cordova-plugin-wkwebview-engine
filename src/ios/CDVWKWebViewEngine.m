@@ -110,6 +110,11 @@
     return [(WKWebView*)_engineWebView loadHTMLString:string baseURL:baseURL];
 }
 
+- (NSURL*) URL
+{
+    return [(WKWebView*)_engineWebView URL];
+}
+
 - (void)updateSettings:(NSDictionary*)settings
 {
     WKWebView* wkWebView = (WKWebView*)_engineWebView;
