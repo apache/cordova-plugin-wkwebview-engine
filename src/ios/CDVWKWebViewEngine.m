@@ -78,6 +78,8 @@
 
     if ([self.viewController conformsToProtocol:@protocol(WKNavigationDelegate)]) {
         wkWebView.navigationDelegate = (id <WKNavigationDelegate>)self.viewController;
+    } else {
+        wkWebView.navigationDelegate = (id <WKNavigationDelegate>)self;
     }
 
     if ([self.viewController conformsToProtocol:@protocol(WKScriptMessageHandler)]) {
@@ -191,6 +193,13 @@
             DLog(@"FAILED pluginJSON = %@", commandString);
 #endif
     }
+}
+
+#pragma mark WKNavigationDelegate implementation
+
+- (void)webView:(WKWebView*)webView didFinishNavigation:(WKNavigation*)navigation
+{
+    [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:CDVPageDidLoadNotification object:webView]];
 }
 
 @end
