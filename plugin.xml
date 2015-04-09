@@ -14,8 +14,8 @@
 	<engines>
 		<engine name="cordova" version=">=3.9.9" />
 	</engines>
-    
-    <dependency id="org.apache.cordova.labs.local-webserver" url="https://git-wip-us.apache.org/repos/asf/cordova-plugins.git#master:local-webserver" version=">=2.1.0" />
+
+    <dependency id="cordova-labs-local-webserver" url="https://git-wip-us.apache.org/repos/asf/cordova-plugins.git#master:local-webserver" version=">=2.1.0" />
 
     <!-- ios -->
     <platform name="ios">
@@ -32,7 +32,7 @@
         <source-file src="src/ios/CDVWKWebViewEngine.m" />
         <header-file src="src/ios/CDVWKWebViewUIDelegate.h" />
         <source-file src="src/ios/CDVWKWebViewUIDelegate.m" />
-        
+
     </platform>
 
 </plugin>
