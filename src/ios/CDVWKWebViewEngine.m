@@ -129,6 +129,22 @@
      wkWebView.configuration.preferences.javaScriptEnabled = [settings cordovaBoolSettingForKey:@"JavaScriptEnabled" default:YES];
      wkWebView.configuration.preferences.javaScriptCanOpenWindowsAutomatically = [settings cordovaBoolSettingForKey:@"JavaScriptCanOpenWindowsAutomatically" default:NO];
      */
+    
+    // By default, DisallowOverscroll is false (thus bounce is allowed)
+    BOOL bounceAllowed = !([settings cordovaBoolSettingForKey:@"DisallowOverscroll" defaultValue:NO]);
+    
+    // prevent webView from bouncing
+    if (!bounceAllowed) {
+        if ([wkWebView respondsToSelector:@selector(scrollView)]) {
+            ((UIScrollView*)[wkWebView scrollView]).bounces = NO;
+        } else {
+            for (id subview in wkWebView.subviews) {
+                if ([[subview class] isSubclassOfClass:[UIScrollView class]]) {
+                    ((UIScrollView*)subview).bounces = NO;
+                }
+            }
+        }
+    }
 }
 
 - (void)updateWithInfo:(NSDictionary*)info
