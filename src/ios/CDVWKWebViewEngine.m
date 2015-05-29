@@ -205,13 +205,22 @@
 
     if (![vc.commandQueue execute:command]) {
 #ifdef DEBUG
-            NSString* commandJson = [jsonEntry JSONString];
+        NSError* error = nil;
+        NSString* commandJson = nil;
+        NSData* jsonData = [NSJSONSerialization dataWithJSONObject:jsonEntry
+                                                           options:0
+                                                             error:&error];
+        
+        if (error == nil) {
+            commandJson = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        }
+
             static NSUInteger maxLogLength = 1024;
             NSString* commandString = ([commandJson length] > maxLogLength) ?
                 [NSString stringWithFormat : @"%@[...]", [commandJson substringToIndex:maxLogLength]] :
                 commandJson;
 
-            DLog(@"FAILED pluginJSON = %@", commandString);
+            NSLog(@"FAILED pluginJSON = %@", commandString);
 #endif
     }
 }
