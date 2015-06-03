@@ -5,19 +5,13 @@ This plugin makes `Cordova` use the `WKWebView` component (new in iOS 8.0) inste
 
 This will also install the `Cordova Local WebServer` plugin.
 
-This plugin currently needs to use the `4.0.x` branch of `cordova-ios`. 
+This plugin currently needs to use the `4.0.x` branch of `cordova-ios`.
 
 To `alpha test` this:
 
-You may have to remove the cached 4.0.x platform:
-
-    rm -rf ~/.cordova/lib/ios/cordova/4.0.x
-        
-Then:
-
     cordova create wkwvtest my.project.id wkwvtest
     cd wkwvtest
-    cordova platform add ios@4.0.x --usegit
+    cordova platform add cordova platform add https://github.com/apache/cordova-ios.git#4.0.x
     cordova plugin add https://github.com/apache/cordova-plugins.git#master:wkwebview-engine
 
 Permissions
