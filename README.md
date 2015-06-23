@@ -11,7 +11,7 @@ To `alpha test` this:
 
     cordova create wkwvtest my.project.id wkwvtest
     cd wkwvtest
-    cordova platform add cordova platform add https://github.com/apache/cordova-ios.git#4.0.x
+    cordova platform add https://github.com/apache/cordova-ios.git#4.0.x
     cordova plugin add https://github.com/apache/cordova-plugins.git#master:wkwebview-engine
 
 Permissions
