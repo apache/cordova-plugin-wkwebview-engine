@@ -3,13 +3,13 @@
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     xmlns:rim="http://www.blackberry.com/ns/widgets"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    id="cordova-labs-wkwebviewengine"
-    version="0.3.0">
+    id="cordova-plugin-wkwebview-engine"
+    version="0.4.0">
     <name>Cordova WKWebView Engine</name>
     <description>Cordova WKWebView Engine Plugin</description>
     <license>Apache 2.0</license>
     <keywords>cordova,wkwebview,webview</keywords>
-    <repo>https://git-wip-us.apache.org/repos/asf/cordova-plugins.git</repo>
+    <repo>https://git-wip-us.apache.org/repos/asf/cordova-plugin-wkwebview-engine.git</repo>
 
 	<engines>
         <engine name="cordova-ios" version=">=4.0.0-dev" />
