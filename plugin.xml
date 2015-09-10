@@ -13,9 +13,8 @@
 
 	<engines>
         <engine name="cordova-ios" version=">=4.0.0-dev" />
+        <engine name="apple-ios" version=">=9.0" />
 	</engines>
-
-    <dependency id="cordova-labs-local-webserver" url="https://git-wip-us.apache.org/repos/asf/cordova-plugins.git#master:local-webserver" version=">=2.3.1" />
 
     <!-- ios -->
     <platform name="ios">

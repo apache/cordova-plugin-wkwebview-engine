@@ -1,18 +1,17 @@
 Cordova WKWebView Engine
 ======
 
-This plugin makes `Cordova` use the `WKWebView` component (new in iOS 8.0) instead of the default `UIWebView` component.
+This plugin makes `Cordova` use the `WKWebView` component instead of the default `UIWebView` component, and is installable only on a system with the iOS 9.0 SDK.
 
-This will also install the `Cordova Local WebServer` plugin.
 
-This plugin currently needs to use the `4.0.x` branch of `cordova-ios`.
+This plugin needs to use the master branch of `cordova-ios` which is the next release of cordova-ios (4.0.0).
 
 To `alpha test` this:
 
     cordova create wkwvtest my.project.id wkwvtest
     cd wkwvtest
     cordova platform add https://github.com/apache/cordova-ios.git#master
-    cordova plugin add https://github.com/apache/cordova-plugins.git#master:wkwebview-engine
+    cordova plugin add https://github.com/apache/cordova-plugin-wkwebview-engine.git#master
 
 Permissions
 -----------
@@ -29,12 +28,3 @@ Supported Platforms
 -------------------
 
 - iOS
-
-Known Issues
--------------------
-
-When you build, it might complain of a linking error. This is a `plugman` bug that does not install `WebKit.framework` properly. Open up your project file in `Xcode` and add it manually.
-
-If you are using the CLI, open `Xcode` by:
-
-        open -a Xcode platforms/ios
