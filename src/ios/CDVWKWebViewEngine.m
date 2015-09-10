@@ -96,7 +96,7 @@
     // the URL needs to be a file reference
     NSURL* url = request.URL;
     
-    if ([_engineWebView respondsToSelector:wk_sel] && [url isFileReferenceURL]) {
+    if ([_engineWebView respondsToSelector:wk_sel] && url.fileURL) {
         // allow the folder containing the file reference to be read as well
         NSURL* readAccessUrl = [request.URL URLByDeletingLastPathComponent];
         return ((id (*)(id, SEL, id, id))objc_msgSend)(_engineWebView, wk_sel, url, readAccessUrl);
