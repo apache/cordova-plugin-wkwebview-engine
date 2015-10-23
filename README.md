@@ -10,24 +10,30 @@ Installation
 
 This plugin needs to use the master branch of `cordova-ios` which is the next release of cordova-ios (4.0.0).
 
-To `alpha test` this:
+To test this:
 
     cordova create wkwvtest my.project.id wkwvtest
     cd wkwvtest
     cordova platform add https://github.com/apache/cordova-ios.git#master
     cordova plugin add https://github.com/apache/cordova-plugin-wkwebview-engine.git#master
-    
-You also must have Xcode 7 and the iOS 9 SDK installed. If you have this and are still getting this error:
 
-`Plugin doesn't support this project's apple-ios version. apple-ios: 8.4.0, failed version requirement: >=9.0`
+Currently, you will have to add the `master` version (>=1.1.1) of the cordova-plugin-whitelist, not the one in npm. So do this also:
 
-You may need to switch to your Xcode Beta installation, using this command:
+    cordova plugin rm cordova-plugin-whitelist
+	cordova plugin add https://github.com/apache/cordova-plugin-whitelist.git#master
 
-`sudo xcode-select -s /Applications/Xcode-beta.app/Contents/Developer`
+   
+You also must have Xcode 7 (iOS 9 SDK) installed. Check which Xcode command-line tools is in use by running:
 
-To switch back:
+    xcode-select --print-path
 
-`sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`
+
+Notes
+------
+
+On an iOS 8 system, Apache Cordova during runtime will switch to using the UIWebView engine instead of using this plugin. If you want to use WKWebView on both iOS 8 and iOS 9 platforms, you will have to resort to using a local webserver.
+
+We have an [experimental plugin](https://github.com/apache/cordova-plugins/tree/master/wkwebview-engine-localhost) that does this. You would use that plugin instead of this one.
 
 Permissions
 -----------
