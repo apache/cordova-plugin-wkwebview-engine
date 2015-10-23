@@ -17,7 +17,7 @@ To test this:
     cordova platform add https://github.com/apache/cordova-ios.git#master
     cordova plugin add https://github.com/apache/cordova-plugin-wkwebview-engine.git#master
 
-Currently, you will have to add the `master` version (>=1.1.1) of the cordova-plugin-whitelist, not the one in npm. So do this also:
+Currently, you will have to add the `master` version (>=1.1.1) of the [cordova-plugin-whitelist](https://github.com/apache/cordova-plugin-whitelist) plugin, not the one in npm. So do this also:
 
     cordova plugin rm cordova-plugin-whitelist
 	cordova plugin add https://github.com/apache/cordova-plugin-whitelist.git#master
@@ -34,6 +34,20 @@ Notes
 On an iOS 8 system, Apache Cordova during runtime will switch to using the UIWebView engine instead of using this plugin. If you want to use WKWebView on both iOS 8 and iOS 9 platforms, you will have to resort to using a local webserver.
 
 We have an [experimental plugin](https://github.com/apache/cordova-plugins/tree/master/wkwebview-engine-localhost) that does this. You would use that plugin instead of this one.
+
+Application Transport Security (ATS) in iOS 9
+-----------
+
+The next released version of the [cordova-cli](https://www.npmjs.com/package/cordova) will support automatic conversion of the [cordova-plugin-whitelist](https://github.com/apache/cordova-plugin-whitelist) &lt;access&gt; and &lt;allow-navigation&gt; tags in config.xml to ATS directives. For now you will have to manually add ATS directives in your application's Info.plist.
+
+The default in all new Apache Cordova projects is the wildcard (*), so add the entry below in your application's Info.plist:
+
+    <key>NSAppTransportSecurity</key>
+    <dict>
+	    <key>NSAllowsArbitraryLoads</key>
+	    <true/>
+    </dict>
+
 
 Permissions
 -----------
