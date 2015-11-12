@@ -17,12 +17,6 @@ To test this:
     cordova platform add https://github.com/apache/cordova-ios.git#master
     cordova plugin add https://github.com/apache/cordova-plugin-wkwebview-engine.git#master
 
-Currently, you will have to add the `master` version (>=1.1.1) of the [cordova-plugin-whitelist](https://github.com/apache/cordova-plugin-whitelist) plugin, not the one in npm. So do this also:
-
-    cordova plugin rm cordova-plugin-whitelist
-	cordova plugin add https://github.com/apache/cordova-plugin-whitelist.git#master
-
-   
 You also must have Xcode 7 (iOS 9 SDK) installed. Check which Xcode command-line tools is in use by running:
 
     xcode-select --print-path
@@ -38,15 +32,7 @@ We have an [experimental plugin](https://github.com/apache/cordova-plugins/tree/
 Application Transport Security (ATS) in iOS 9
 -----------
 
-The next released version of the [cordova-cli](https://www.npmjs.com/package/cordova) will support automatic conversion of the [cordova-plugin-whitelist](https://github.com/apache/cordova-plugin-whitelist) &lt;access&gt; and &lt;allow-navigation&gt; tags in config.xml to ATS directives. For now you will have to manually add ATS directives in your application's Info.plist.
-
-The default in all new Apache Cordova projects is the wildcard (*), so add the entry below in your application's Info.plist:
-
-    <key>NSAppTransportSecurity</key>
-    <dict>
-	    <key>NSAllowsArbitraryLoads</key>
-	    <true/>
-    </dict>
+The next released version of the [cordova-cli 5.4.0](https://www.npmjs.com/package/cordova) will support automatic conversion of the [&lt;access&gt;](http://cordova.apache.org/docs/en/edge/guide/appdev/whitelist/index.html) tags in config.xml to Application Transport Security [ATS](https://developer.apple.com/library/prerelease/ios/documentation/General/Reference/InfoPlistKeyReference/Articles/CocoaKeys.html#//apple_ref/doc/uid/TP40009251-SW33) directives. Upgrade to the version 5.4.0 to use this new functionality.
 
 
 Permissions
