@@ -256,4 +256,53 @@
     [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:CDVPageDidLoadNotification object:webView]];
 }
 
+- (BOOL)defaultResourcePolicyForURL:(NSURL*)url
+{
+    // all file:// urls are allowed
+    if ([url isFileURL]) {
+        return YES;
+    }
+    
+    return NO;
+}
+
+- (void) webView: (WKWebView *) webView decidePolicyForNavigationAction: (WKNavigationAction*) navigationAction decisionHandler: (void (^)(WKNavigationActionPolicy)) decisionHandler
+{
+    NSURL* url = [navigationAction.request URL];
+    CDVViewController* vc = (CDVViewController*)self.viewController;
+    
+    /*
+     * Give plugins the chance to handle the url
+     */
+    BOOL anyPluginsResponded = NO;
+    BOOL shouldAllowRequest = NO;
+    
+    for (NSString* pluginName in vc.pluginObjects) {
+        CDVPlugin* plugin = [vc.pluginObjects objectForKey:pluginName];
+        SEL selector = NSSelectorFromString(@"shouldOverrideLoadWithRequest:navigationType:");
+        if ([plugin respondsToSelector:selector]) {
+            anyPluginsResponded = YES;
+            shouldAllowRequest = (((BOOL (*)(id, SEL, id, int))objc_msgSend)(plugin, selector, navigationAction.request, navigationAction.navigationType));
+            if (!shouldAllowRequest) {
+                break;
+            }
+        }
+    }
+    
+    if (anyPluginsResponded) {
+        return decisionHandler(shouldAllowRequest);
+    }
+    
+    /*
+     * Handle all other types of urls (tel:, sms:), and requests to load a url in the main webview.
+     */
+    BOOL shouldAllowNavigation = [self defaultResourcePolicyForURL:url];
+    if (shouldAllowNavigation) {
+        return decisionHandler(YES);
+    } else {
+        [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:CDVPluginHandleOpenURLNotification object:url]];
+    }
+    
+    return decisionHandler(NO);
+}
 @end
