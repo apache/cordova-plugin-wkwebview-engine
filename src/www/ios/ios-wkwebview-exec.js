@@ -80,7 +80,9 @@ function convertMessageToArgsNativeToJs(message) {
     return args;
 }
 
-function iOSExec() {
+var iOSExec = function() {
+    
+    // detect change in bridge, if there is a change, we forward to new bridge
 
     // if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.cordova && window.webkit.messageHandlers.cordova.postMessage) {
     //     bridgeMode = jsToNativeModes.WK_WEBVIEW_BINDING;
@@ -132,6 +134,13 @@ iOSExec.nativeCallback = function(callbackId, status, message, keepCallback, deb
     	cordova.callbackFromNative(callbackId, success, status, args, keepCallback);
     }, 0);
 };
+
+// unregister the old bridge
+cordova.define.remove('cordova/exec');
+// redefine bridge to our new bridge
+cordova.define("cordova/exec", function(require, exports, module) {
+    module.exports = iOSExec;
+});
 
 
 module.exports = iOSExec;
