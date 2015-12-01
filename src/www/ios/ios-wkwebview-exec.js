@@ -135,6 +135,16 @@ iOSExec.nativeCallback = function(callbackId, status, message, keepCallback, deb
     }, 0);
 };
 
+// for backwards compatibility
+iOSExec.nativeEvalAndFetch = function(func) {
+    try {
+        func();
+    } catch (e) {
+        console.log(e);
+    }
+};
+
+
 // unregister the old bridge
 cordova.define.remove('cordova/exec');
 // redefine bridge to our new bridge
