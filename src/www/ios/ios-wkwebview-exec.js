@@ -144,13 +144,36 @@ iOSExec.nativeEvalAndFetch = function(func) {
     }
 };
 
+// Proxy the exec for bridge changes. See CB-10106
+
+function cordovaExec() {
+    var cexec = require('cordova/exec');
+    var cexec_valid = (typeof cexec.nativeFetchMessages === 'function') && (typeof cexec.nativeEvalAndFetch === 'function') && (typeof cexec.nativeCallback === 'function');
+    return (cexec_valid && execProxy !== cexec)? cexec : iOSExec;
+}
+
+function execProxy() {
+    cordovaExec().apply(null, arguments);
+};
+
+execProxy.nativeFetchMessages = function() {
+    return cordovaExec().nativeFetchMessages.apply(null, arguments);
+};
+
+execProxy.nativeEvalAndFetch = function() {
+    return cordovaExec().nativeEvalAndFetch.apply(null, arguments);
+};
+
+execProxy.nativeCallback = function() {
+    return cordovaExec().nativeCallback.apply(null, arguments);
+};
+
+module.exports = execProxy;
+
 
 // unregister the old bridge
 cordova.define.remove('cordova/exec');
 // redefine bridge to our new bridge
 cordova.define("cordova/exec", function(require, exports, module) {
-    module.exports = iOSExec;
+    module.exports = execProxy;
 });
-
-
-module.exports = iOSExec;
