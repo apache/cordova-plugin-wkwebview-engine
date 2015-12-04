@@ -121,7 +121,8 @@ var iOSExec = function() {
 
     actionArgs = massageArgsJsToNative(actionArgs);
 
-    var command = [callbackId, service, action, actionArgs];
+    // CB-10133 DataClone DOM Exception 25 guard (fast function remover)
+    var command = [callbackId, service, action, JSON.parse(JSON.stringify(actionArgs))];
     window.webkit.messageHandlers.cordova.postMessage(command);
 
 }
