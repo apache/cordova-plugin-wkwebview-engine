@@ -258,7 +258,26 @@
 
 - (void)webView:(WKWebView*)webView didFinishNavigation:(WKNavigation*)navigation
 {
+    CDVViewController* vc = (CDVViewController*)self.viewController;
+    [CDVUserAgentUtil releaseLock:vc.userAgentLockToken];
+    
     [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:CDVPageDidLoadNotification object:webView]];
+}
+
+- (void)webView:(WKWebView*)theWebView didFailNavigation:(WKNavigation*)navigation withError:(NSError*)error
+{
+    CDVViewController* vc = (CDVViewController*)self.viewController;
+    [CDVUserAgentUtil releaseLock:vc.userAgentLockToken];
+    
+    NSString* message = [NSString stringWithFormat:@"Failed to load webpage with error: %@", [error localizedDescription]];
+    NSLog(@"%@", message);
+    
+    NSURL* errorUrl = vc.errorURL;
+    if (errorUrl) {
+        errorUrl = [NSURL URLWithString:[NSString stringWithFormat:@"?error=%@", [message stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]] relativeToURL:errorUrl];
+        NSLog(@"%@", [errorUrl absoluteString]);
+        [theWebView loadRequest:[NSURLRequest requestWithURL:errorUrl]];
+    }
 }
 
 - (BOOL)defaultResourcePolicyForURL:(NSURL*)url
