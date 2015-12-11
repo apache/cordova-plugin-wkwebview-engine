@@ -21,6 +21,10 @@
 
 # Release Notes
 
+### 1.0.1 (Dec 11, 2015)
+
+* CB-10190 - WKWebView engine is not releasing the user-agent lock
+
 ### 1.0.0 (Dec 04, 2015)
 
 * CB-10146 - Add to README WKWebViewEngine quirks that will affect migration from UIWebView
