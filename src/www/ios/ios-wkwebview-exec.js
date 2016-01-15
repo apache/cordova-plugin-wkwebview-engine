@@ -171,10 +171,11 @@ execProxy.nativeCallback = function() {
 
 module.exports = execProxy;
 
-
-// unregister the old bridge
-cordova.define.remove('cordova/exec');
-// redefine bridge to our new bridge
-cordova.define("cordova/exec", function(require, exports, module) {
-    module.exports = execProxy;
-});
+if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.cordova && window.webkit.messageHandlers.cordova.postMessage) {
+   // unregister the old bridge
+   cordova.define.remove('cordova/exec');
+   // redefine bridge to our new bridge
+   cordova.define("cordova/exec", function(require, exports, module) {
+      module.exports = execProxy;
+   });
+}
