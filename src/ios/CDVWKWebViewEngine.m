@@ -169,6 +169,16 @@
             }
         }
     }
+
+    NSString* decelerationSetting = [settings cordovaSettingForKey:@"WKWebViewDecelerationSpeed"];
+    if (!decelerationSetting) {
+        // Fallback to the UIWebView-named preference
+        decelerationSetting = [settings cordovaSettingForKey:@"UIWebViewDecelerationSpeed"];
+    }
+
+    if (![@"fast" isEqualToString:decelerationSetting]) {
+        [wkWebView.scrollView setDecelerationRate:UIScrollViewDecelerationRateNormal];
+    }
 }
 
 - (void)updateWithInfo:(NSDictionary*)info
