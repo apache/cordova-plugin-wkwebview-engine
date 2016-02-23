@@ -14,6 +14,13 @@
     "cordova",
     "wkwebview"
   ],
+  "scripts": {
+    "test": "npm run jshint",
+    "jshint": "node node_modules/jshint/bin/jshint src"
+  },
   "author": "Apache Cordova",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "jshint": "^2.6.0"
+  }
 }
