@@ -53,11 +53,34 @@
         [userContentController addScriptMessageHandler:self name:CDV_BRIDGE_NAME];
 
         WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
+        NSDictionary* settings = self.commandDelegate.settings;
+
         configuration.userContentController = userContentController;
+        configuration.preferences.minimumFontSize = [settings cordovaFloatSettingForKey:@"MinimumFontSize" defaultValue:0.0];
+        configuration.allowsInlineMediaPlayback = [settings cordovaBoolSettingForKey:@"AllowInlineMediaPlayback" defaultValue:NO];
+        configuration.mediaPlaybackRequiresUserAction = [settings cordovaBoolSettingForKey:@"MediaPlaybackRequiresUserAction" defaultValue:YES];
+        configuration.suppressesIncrementalRendering = [settings cordovaBoolSettingForKey:@"SuppressesIncrementalRendering" defaultValue:NO];
+        configuration.mediaPlaybackAllowsAirPlay = [settings cordovaBoolSettingForKey:@"MediaPlaybackAllowsAirPlay" defaultValue:YES];
 
         WKWebView* wkWebView = [[WKWebView alloc] initWithFrame:frame configuration:configuration];
 
         wkWebView.UIDelegate = self.uiDelegate;
+
+        // By default, DisallowOverscroll is false (thus bounce is allowed)
+        BOOL bounceAllowed = !([settings cordovaBoolSettingForKey:@"DisallowOverscroll" defaultValue:NO]);
+
+        // prevent webView from bouncing
+        if (!bounceAllowed) {
+            if ([wkWebView respondsToSelector:@selector(scrollView)]) {
+                ((UIScrollView*)[wkWebView scrollView]).bounces = NO;
+            } else {
+                for (id subview in wkWebView.subviews) {
+                    if ([[subview class] isSubclassOfClass:[UIScrollView class]]) {
+                        ((UIScrollView*)subview).bounces = NO;
+                    }
+                }
+            }
+        }
 
         self.engineWebView = wkWebView;
 
@@ -86,8 +109,6 @@
     if ([self.viewController conformsToProtocol:@protocol(WKScriptMessageHandler)]) {
         [wkWebView.configuration.userContentController addScriptMessageHandler:(id < WKScriptMessageHandler >)self.viewController name:@"cordova"];
     }
-
-    [self updateSettings:self.commandDelegate.settings];
 }
 
 - (id)loadRequest:(NSURLRequest*)request
@@ -130,7 +151,7 @@
 {
     // See: https://issues.apache.org/jira/browse/CB-9636
     SEL wk_sel = NSSelectorFromString(CDV_WKWEBVIEW_FILE_URL_LOAD_SELECTOR);
-    
+
     // if it's a file URL, check whether WKWebView has the selector (which is in iOS 9 and up only)
     if (request.URL.fileURL) {
         return [_engineWebView respondsToSelector:wk_sel];
@@ -139,37 +160,6 @@
     }
 }
 
-- (void)updateSettings:(NSDictionary*)settings
-{
-    WKWebView* wkWebView = (WKWebView*)_engineWebView;
-
-    wkWebView.configuration.preferences.minimumFontSize = [settings cordovaFloatSettingForKey:@"MinimumFontSize" defaultValue:0.0];
-    wkWebView.configuration.allowsInlineMediaPlayback = [settings cordovaBoolSettingForKey:@"AllowInlineMediaPlayback" defaultValue:NO];
-    wkWebView.configuration.mediaPlaybackRequiresUserAction = [settings cordovaBoolSettingForKey:@"MediaPlaybackRequiresUserAction" defaultValue:YES];
-    wkWebView.configuration.suppressesIncrementalRendering = [settings cordovaBoolSettingForKey:@"SuppressesIncrementalRendering" defaultValue:NO];
-    wkWebView.configuration.mediaPlaybackAllowsAirPlay = [settings cordovaBoolSettingForKey:@"MediaPlaybackAllowsAirPlay" defaultValue:YES];
-
-    /*
-     wkWebView.configuration.preferences.javaScriptEnabled = [settings cordovaBoolSettingForKey:@"JavaScriptEnabled" default:YES];
-     wkWebView.configuration.preferences.javaScriptCanOpenWindowsAutomatically = [settings cordovaBoolSettingForKey:@"JavaScriptCanOpenWindowsAutomatically" default:NO];
-     */
-    
-    // By default, DisallowOverscroll is false (thus bounce is allowed)
-    BOOL bounceAllowed = !([settings cordovaBoolSettingForKey:@"DisallowOverscroll" defaultValue:NO]);
-    
-    // prevent webView from bouncing
-    if (!bounceAllowed) {
-        if ([wkWebView respondsToSelector:@selector(scrollView)]) {
-            ((UIScrollView*)[wkWebView scrollView]).bounces = NO;
-        } else {
-            for (id subview in wkWebView.subviews) {
-                if ([[subview class] isSubclassOfClass:[UIScrollView class]]) {
-                    ((UIScrollView*)subview).bounces = NO;
-                }
-            }
-        }
-    }
-}
 
 - (void)updateWithInfo:(NSDictionary*)info
 {
@@ -197,10 +187,6 @@
 
     if (uiDelegate && [uiDelegate conformsToProtocol:@protocol(WKUIDelegate)]) {
         wkWebView.UIDelegate = uiDelegate;
-    }
-
-    if (settings && [settings isKindOfClass:[NSDictionary class]]) {
-        [self updateSettings:settings];
     }
 }
 
@@ -234,7 +220,7 @@
         NSData* jsonData = [NSJSONSerialization dataWithJSONObject:jsonEntry
                                                            options:0
                                                              error:&error];
-        
+
         if (error == nil) {
             commandJson = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
         }
@@ -260,7 +246,7 @@
 {
     CDVViewController* vc = (CDVViewController*)self.viewController;
     [CDVUserAgentUtil releaseLock:vc.userAgentLockToken];
-    
+
     [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:CDVPageDidLoadNotification object:webView]];
 }
 
@@ -268,10 +254,10 @@
 {
     CDVViewController* vc = (CDVViewController*)self.viewController;
     [CDVUserAgentUtil releaseLock:vc.userAgentLockToken];
-    
+
     NSString* message = [NSString stringWithFormat:@"Failed to load webpage with error: %@", [error localizedDescription]];
     NSLog(@"%@", message);
-    
+
     NSURL* errorUrl = vc.errorURL;
     if (errorUrl) {
         errorUrl = [NSURL URLWithString:[NSString stringWithFormat:@"?error=%@", [message stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]] relativeToURL:errorUrl];
@@ -286,7 +272,7 @@
     if ([url isFileURL]) {
         return YES;
     }
-    
+
     return NO;
 }
 
@@ -294,13 +280,13 @@
 {
     NSURL* url = [navigationAction.request URL];
     CDVViewController* vc = (CDVViewController*)self.viewController;
-    
+
     /*
      * Give plugins the chance to handle the url
      */
     BOOL anyPluginsResponded = NO;
     BOOL shouldAllowRequest = NO;
-    
+
     for (NSString* pluginName in vc.pluginObjects) {
         CDVPlugin* plugin = [vc.pluginObjects objectForKey:pluginName];
         SEL selector = NSSelectorFromString(@"shouldOverrideLoadWithRequest:navigationType:");
@@ -312,11 +298,11 @@
             }
         }
     }
-    
+
     if (anyPluginsResponded) {
         return decisionHandler(shouldAllowRequest);
     }
-    
+
     /*
      * Handle all other types of urls (tel:, sms:), and requests to load a url in the main webview.
      */
@@ -326,7 +312,7 @@
     } else {
         [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:CDVPluginHandleOpenURLNotification object:url]];
     }
-    
+
     return decisionHandler(NO);
 }
 @end
