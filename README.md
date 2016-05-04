@@ -29,27 +29,36 @@ In iOS 9, Apple has fixed the [issue](http://www.openradar.me/18039024) present 
 Installation
 -----------
 
-This plugin needs to use at least cordova-ios 4.0.0.
+This plugin needs cordova-ios >4.0.0.
 
-To test this while it is still in development:
-
-    cordova create wkwvtest my.project.id wkwvtest
-    cd wkwvtest
-    cordova platform add https://github.com/apache/cordova-ios.git#master
-    cordova plugin add https://github.com/apache/cordova-plugin-wkwebview-engine.git#master
-	
-
-Once cordova-ios 4.0.0 and the plugin is released on npm, you can just do:
+To install the current release:
 
     cordova create wkwvtest my.project.id wkwvtest
     cd wkwvtest
     cordova platform add ios@4
     cordova plugin add cordova-plugin-wkwebview-engine
 
+To test the development version:
 
-You also must have Xcode 7 (iOS 9 SDK) installed. Check which Xcode command-line tools is in use by running:
+    cordova create wkwvtest my.project.id wkwvtest
+    cd wkwvtest
+    cordova platform add https://github.com/apache/cordova-ios.git#master
+    cordova plugin add https://github.com/apache/cordova-plugin-wkwebview-engine.git#master
+
+You also must have Xcode 7 (iOS 9 SDK) installed. Check your Xcode version by running:
 
     xcode-select --print-path
+
+Required Permissions
+-----------
+WKWebView may not fully launch (the deviceready event may not fire) unless if the following is included in config.xml:
+#### config.xml
+
+        <feature name="CDVWKWebViewEngine">
+            <param name="ios-package" value="CDVWKWebViewEngine" />
+        </feature>
+
+        <preference name="CordovaWebViewEngine" value="CDVWKWebViewEngine" />
 
 
 Notes
@@ -74,16 +83,7 @@ Apple Issues
 
 The `AllowInlineMediaPlayback` preference will not work because of this [Apple bug](http://openradar.appspot.com/radar?id=6673091526656000). 
 
-Permissions
------------
 
-#### config.xml
-
-        <feature name="CDVWKWebViewEngine">
-            <param name="ios-package" value="CDVWKWebViewEngine" />
-        </feature>
-
-        <preference name="CordovaWebViewEngine" value="CDVWKWebViewEngine" />
 
 Supported Platforms
 -------------------
