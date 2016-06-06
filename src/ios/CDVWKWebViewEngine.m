@@ -223,6 +223,11 @@
     return _engineWebView;
 }
 
+- (UIView*)webView
+{
+    return self.engineWebView;
+}
+
 #pragma mark WKScriptMessageHandler implementation
 
 - (void)userContentController:(WKUserContentController*)userContentController didReceiveScriptMessage:(WKScriptMessage*)message
