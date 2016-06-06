@@ -70,8 +70,9 @@
 - (void)pluginInitialize
 {
     // viewController would be available now. we attempt to set all possible delegates to it, by default
+    NSDictionary* settings = self.commandDelegate.settings;
 
-    WKWebView* wkWebView = (WKWebView*)_engineWebView;
+    WKWebView* wkWebView = [[WKWebView alloc] initWithFrame:_engineWebView.frame configuration:[self createConfigurationFromSettings:settings]];
 
     if ([self.viewController conformsToProtocol:@protocol(WKUIDelegate)]) {
         wkWebView.UIDelegate = (id <WKUIDelegate>)self.viewController;
@@ -87,7 +88,9 @@
         [wkWebView.configuration.userContentController addScriptMessageHandler:(id < WKScriptMessageHandler >)self.viewController name:@"cordova"];
     }
 
-    [self updateSettings:self.commandDelegate.settings];
+    _engineWebView = wkWebView;
+    [self updateWebViewBehaviourFromSettings:settings];
+
 }
 
 - (id)loadRequest:(NSURLRequest*)request
@@ -139,24 +142,33 @@
     }
 }
 
-- (void)updateSettings:(NSDictionary*)settings
+- (WKWebViewConfiguration*) createConfigurationFromSettings:(NSDictionary*)settings
 {
-    WKWebView* wkWebView = (WKWebView*)_engineWebView;
+    WKWebView* oldWebView = (WKWebView*) _engineWebView;
+    WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
 
-    wkWebView.configuration.preferences.minimumFontSize = [settings cordovaFloatSettingForKey:@"MinimumFontSize" defaultValue:0.0];
-    wkWebView.configuration.allowsInlineMediaPlayback = [settings cordovaBoolSettingForKey:@"AllowInlineMediaPlayback" defaultValue:NO];
-    wkWebView.configuration.mediaPlaybackRequiresUserAction = [settings cordovaBoolSettingForKey:@"MediaPlaybackRequiresUserAction" defaultValue:YES];
-    wkWebView.configuration.suppressesIncrementalRendering = [settings cordovaBoolSettingForKey:@"SuppressesIncrementalRendering" defaultValue:NO];
-    wkWebView.configuration.mediaPlaybackAllowsAirPlay = [settings cordovaBoolSettingForKey:@"MediaPlaybackAllowsAirPlay" defaultValue:YES];
+    configuration.userContentController = oldWebView.configuration.userContentController;
+    configuration.preferences.minimumFontSize = [settings cordovaFloatSettingForKey:@"MinimumFontSize" defaultValue:0.0];
+    configuration.allowsInlineMediaPlayback = [settings cordovaBoolSettingForKey:@"AllowInlineMediaPlayback" defaultValue:NO];
+    configuration.mediaPlaybackRequiresUserAction = [settings cordovaBoolSettingForKey:@"MediaPlaybackRequiresUserAction" defaultValue:YES];
+    configuration.suppressesIncrementalRendering = [settings cordovaBoolSettingForKey:@"SuppressesIncrementalRendering" defaultValue:NO];
+    configuration.mediaPlaybackAllowsAirPlay = [settings cordovaBoolSettingForKey:@"MediaPlaybackAllowsAirPlay" defaultValue:YES];
 
     /*
-     wkWebView.configuration.preferences.javaScriptEnabled = [settings cordovaBoolSettingForKey:@"JavaScriptEnabled" default:YES];
-     wkWebView.configuration.preferences.javaScriptCanOpenWindowsAutomatically = [settings cordovaBoolSettingForKey:@"JavaScriptCanOpenWindowsAutomatically" default:NO];
+     configuration.preferences.javaScriptEnabled = [settings cordovaBoolSettingForKey:@"JavaScriptEnabled" default:YES];
+     configuration.preferences.javaScriptCanOpenWindowsAutomatically = [settings cordovaBoolSettingForKey:@"JavaScriptCanOpenWindowsAutomatically" default:NO];
      */
-    
+
+    return configuration;
+}
+
+- (void) updateWebViewBehaviourFromSettings:(NSDictionary*)settings
+{
+    WKWebView* wkWebView = (WKWebView *)_engineWebView;
+
     // By default, DisallowOverscroll is false (thus bounce is allowed)
     BOOL bounceAllowed = !([settings cordovaBoolSettingForKey:@"DisallowOverscroll" defaultValue:NO]);
-    
+
     // prevent webView from bouncing
     if (!bounceAllowed) {
         if ([wkWebView respondsToSelector:@selector(scrollView)]) {
@@ -178,39 +190,6 @@
 
     if (![@"fast" isEqualToString:decelerationSetting]) {
         [wkWebView.scrollView setDecelerationRate:UIScrollViewDecelerationRateNormal];
-    }
-}
-
-- (void)updateWithInfo:(NSDictionary*)info
-{
-    NSDictionary* scriptMessageHandlers = [info objectForKey:kCDVWebViewEngineScriptMessageHandlers];
-    NSDictionary* settings = [info objectForKey:kCDVWebViewEngineWebViewPreferences];
-    id navigationDelegate = [info objectForKey:kCDVWebViewEngineWKNavigationDelegate];
-    id uiDelegate = [info objectForKey:kCDVWebViewEngineWKUIDelegate];
-
-    WKWebView* wkWebView = (WKWebView*)_engineWebView;
-
-    if (scriptMessageHandlers && [scriptMessageHandlers isKindOfClass:[NSDictionary class]]) {
-        NSArray* allKeys = [scriptMessageHandlers allKeys];
-
-        for (NSString* key in allKeys) {
-            id object = [scriptMessageHandlers objectForKey:key];
-            if ([object conformsToProtocol:@protocol(WKScriptMessageHandler)]) {
-                [wkWebView.configuration.userContentController addScriptMessageHandler:object name:key];
-            }
-        }
-    }
-
-    if (navigationDelegate && [navigationDelegate conformsToProtocol:@protocol(WKNavigationDelegate)]) {
-        wkWebView.navigationDelegate = navigationDelegate;
-    }
-
-    if (uiDelegate && [uiDelegate conformsToProtocol:@protocol(WKUIDelegate)]) {
-        wkWebView.UIDelegate = uiDelegate;
-    }
-
-    if (settings && [settings isKindOfClass:[NSDictionary class]]) {
-        [self updateSettings:settings];
     }
 }
 
