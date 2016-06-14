@@ -103,13 +103,16 @@
 
 - (BOOL)reloadIfRequired
 {
-    NSLog(@"%@", @"CDVWKWebViewEngine reloadIfRequired");
     WKWebView* wkWebView = (WKWebView*)_engineWebView;
     NSString* title = wkWebView.title;
-    NSLog(@"CDVWKWebViewEngine reloadIfRequired WKWebView.title: %@", title);
-
     BOOL reload = ((title == nil) || [title isEqualToString:@""]);
+
+#ifdef DEBUG
+    NSLog(@"%@", @"CDVWKWebViewEngine reloadIfRequired");
+    NSLog(@"CDVWKWebViewEngine reloadIfRequired WKWebView.title: %@", title);
     NSLog(@"CDVWKWebViewEngine reloadIfRequired reload: %u", reload);
+#endif
+
     if (reload) {
         NSLog(@"%@", @"CDVWKWebViewEngine reloading!");
         [wkWebView reload];
