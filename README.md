@@ -69,6 +69,11 @@ Limitations
 
 If you are upgrading from UIWebView, please note the limitations of using WKWebView as outlined in our [issue tracker](https://issues.apache.org/jira/issues/?jql=project%20%3D%20CB%20AND%20labels%20%3D%20wkwebview-known-issues).
 
+ 
+Apple Issues
+--------
+
+The `AllowInlineMediaPlayback` preference will not work on iOS8 because of this [Apple bug](http://openradar.appspot.com/radar?id=6673091526656000). 
 
 Permissions
 -----------
