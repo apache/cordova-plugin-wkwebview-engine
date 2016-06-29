@@ -14,6 +14,7 @@
 		7E9F51B919DA1B1600DA31AC /* libCDVWKWebViewEngineLib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E9F519519DA102000DA31AC /* libCDVWKWebViewEngineLib.a */; };
 		7E9F51BA19DA1B2000DA31AC /* libCordova.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E9F519019DA0F8300DA31AC /* libCordova.a */; };
 		7EACDCE71D234E2A00494C9E /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7EACDCE61D234E2A00494C9E /* WebKit.framework */; };
+		7EACDCEB1D234FB300494C9E /* CDVWKWebViewUIDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 7EACDCEA1D234FB300494C9E /* CDVWKWebViewUIDelegate.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -63,6 +64,8 @@
 		7E9F51B219DA116500DA31AC /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		7E9F51B419DA127E00DA31AC /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		7EACDCE61D234E2A00494C9E /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.3.sdk/System/Library/Frameworks/WebKit.framework; sourceTree = DEVELOPER_DIR; };
+		7EACDCE91D234FB300494C9E /* CDVWKWebViewUIDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CDVWKWebViewUIDelegate.h; path = ../../../src/ios/CDVWKWebViewUIDelegate.h; sourceTree = SOURCE_ROOT; };
+		7EACDCEA1D234FB300494C9E /* CDVWKWebViewUIDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CDVWKWebViewUIDelegate.m; path = ../../../src/ios/CDVWKWebViewUIDelegate.m; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -121,6 +124,8 @@
 		7E9F519619DA102000DA31AC /* CDVWKWebViewEngineLib */ = {
 			isa = PBXGroup;
 			children = (
+				7EACDCE91D234FB300494C9E /* CDVWKWebViewUIDelegate.h */,
+				7EACDCEA1D234FB300494C9E /* CDVWKWebViewUIDelegate.m */,
 				7E9F51A919DA10AE00DA31AC /* CDVWKWebViewEngine.m */,
 				7E9F51AA19DA10AE00DA31AC /* CDVWKWebViewEngine.h */,
 			);
@@ -248,6 +253,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7EACDCEB1D234FB300494C9E /* CDVWKWebViewUIDelegate.m in Sources */,
 				7E9F51AB19DA10AE00DA31AC /* CDVWKWebViewEngine.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
