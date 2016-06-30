@@ -54,6 +54,8 @@
         <source-file src="src/ios/CDVWKWebViewEngine.m" />
         <header-file src="src/ios/CDVWKWebViewUIDelegate.h" />
         <source-file src="src/ios/CDVWKWebViewUIDelegate.m" />
+        
+        <asset src="src/ios/xhr.js" target="xhr.js" />
 
     </platform>
 

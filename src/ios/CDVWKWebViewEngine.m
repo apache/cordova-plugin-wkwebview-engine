@@ -265,7 +265,7 @@
 
 - (WKUserScript*) wkionicScript
 {
-    NSString *scriptFile = [[NSBundle mainBundle] pathForResource:@"xhr" ofType:@"js"];
+    NSString *scriptFile = [[NSBundle mainBundle] pathForResource:@"www/xhr" ofType:@"js"];
     NSString *source = [NSString stringWithContentsOfFile:scriptFile encoding:NSUTF8StringEncoding error:nil];
     return [[WKUserScript alloc] initWithSource:source
                                   injectionTime:WKUserScriptInjectionTimeAtDocumentStart
