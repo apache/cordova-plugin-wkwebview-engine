@@ -24,9 +24,13 @@
 #import <objc/message.h>
 
 #define CDV_BRIDGE_NAME @"cordova"
+#define CDV_IONIC_WK @"xhr"
 #define CDV_WKWEBVIEW_FILE_URL_LOAD_SELECTOR @"loadFileURL:allowingReadAccessToURL:"
 
 @interface CDVWKWebViewEngine ()
+{
+    NSOperationQueue *fileQueue;
+}
 
 @property (nonatomic, strong, readwrite) UIView* engineWebView;
 @property (nonatomic, strong, readwrite) id <WKUIDelegate> uiDelegate;
@@ -47,10 +51,13 @@
         if (NSClassFromString(@"WKWebView") == nil) {
             return nil;
         }
+        fileQueue = [[NSOperationQueue alloc] init];
         self.uiDelegate = [[CDVWKWebViewUIDelegate alloc] initWithTitle:[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"]];
 
         WKUserContentController* userContentController = [[WKUserContentController alloc] init];
         [userContentController addScriptMessageHandler:self name:CDV_BRIDGE_NAME];
+        [userContentController addScriptMessageHandler:self name:CDV_IONIC_WK];
+        [userContentController addUserScript:[self wkionicScript]];
 
         WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
         configuration.userContentController = userContentController;
@@ -179,10 +186,6 @@
     wkWebView.configuration.suppressesIncrementalRendering = [settings cordovaBoolSettingForKey:@"SuppressesIncrementalRendering" defaultValue:NO];
     wkWebView.configuration.mediaPlaybackAllowsAirPlay = [settings cordovaBoolSettingForKey:@"MediaPlaybackAllowsAirPlay" defaultValue:YES];
 
-    /*
-     wkWebView.configuration.preferences.javaScriptEnabled = [settings cordovaBoolSettingForKey:@"JavaScriptEnabled" default:YES];
-     wkWebView.configuration.preferences.javaScriptCanOpenWindowsAutomatically = [settings cordovaBoolSettingForKey:@"JavaScriptCanOpenWindowsAutomatically" default:NO];
-     */
 
     // By default, DisallowOverscroll is false (thus bounce is allowed)
     BOOL bounceAllowed = !([settings cordovaBoolSettingForKey:@"DisallowOverscroll" defaultValue:NO]);
@@ -199,6 +202,8 @@
             }
         }
     }
+    
+    wkWebView.scrollView.scrollEnabled = [settings cordovaFloatSettingForKey:@"ScrollEnabled" defaultValue:NO];
 
     NSString* decelerationSetting = [settings cordovaSettingForKey:@"WKWebViewDecelerationSpeed"];
     if (!decelerationSetting) {
@@ -258,20 +263,34 @@
     return self.engineWebView;
 }
 
+- (WKUserScript*) wkionicScript
+{
+    NSString *scriptFile = [[NSBundle mainBundle] pathForResource:@"xhr" ofType:@"js"];
+    NSString *source = [NSString stringWithContentsOfFile:scriptFile encoding:NSUTF8StringEncoding error:nil];
+    return [[WKUserScript alloc] initWithSource:source
+                                  injectionTime:WKUserScriptInjectionTimeAtDocumentStart
+                               forMainFrameOnly:NO];
+}
+
 #pragma mark WKScriptMessageHandler implementation
 
 - (void)userContentController:(WKUserContentController*)userContentController didReceiveScriptMessage:(WKScriptMessage*)message
 {
-    if (![message.name isEqualToString:CDV_BRIDGE_NAME]) {
-        return;
+    if ([message.name isEqualToString:CDV_BRIDGE_NAME]) {
+        [self handleCordovaMessage: message];
+    } else if ([message.name isEqualToString:CDV_IONIC_WK]) {
+        [self handleXHRMessage: message];
     }
+}
 
+- (void) handleCordovaMessage:(WKScriptMessage*)message
+{
     CDVViewController* vc = (CDVViewController*)self.viewController;
-
+    
     NSArray* jsonEntry = message.body; // NSString:callbackId, NSString:service, NSString:action, NSArray:args
     CDVInvokedUrlCommand* command = [CDVInvokedUrlCommand commandFromJson:jsonEntry];
     CDV_EXEC_LOG(@"Exec(%@): Calling %@.%@", command.callbackId, command.className, command.methodName);
-
+    
     if (![vc.commandQueue execute:command]) {
 #ifdef DEBUG
         NSError* error = nil;
@@ -279,20 +298,53 @@
         NSData* jsonData = [NSJSONSerialization dataWithJSONObject:jsonEntry
                                                            options:0
                                                              error:&error];
-
+        
         if (error == nil) {
             commandJson = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
         }
-
-            static NSUInteger maxLogLength = 1024;
-            NSString* commandString = ([commandJson length] > maxLogLength) ?
-                [NSString stringWithFormat : @"%@[...]", [commandJson substringToIndex:maxLogLength]] :
-                commandJson;
-
-            NSLog(@"FAILED pluginJSON = %@", commandString);
+        
+        static NSUInteger maxLogLength = 1024;
+        NSString* commandString = ([commandJson length] > maxLogLength) ?
+        [NSString stringWithFormat : @"%@[...]", [commandJson substringToIndex:maxLogLength]] :
+        commandJson;
+        
+        NSLog(@"FAILED pluginJSON = %@", commandString);
 #endif
     }
 }
+
+- (void)handleXHRMessage:(WKScriptMessage*)message
+{
+    NSArray *parts = [message.body componentsSeparatedByString:@"->"];
+    if (parts.count != 2) {
+        return;
+    }
+    NSString *requestId = parts[0];
+    NSString *requestPath = parts[1];
+    
+    [self sendXHRResponse:requestId path: requestPath];
+}
+
+- (void)sendXHRResponse:(NSString *)requestId path:(NSString *)requestPath
+{
+    [fileQueue addOperationWithBlock:^{
+        WKWebView* wkWebView = (WKWebView*)_engineWebView;
+        NSURL *path = [[[wkWebView URL] URLByDeletingLastPathComponent] URLByAppendingPathComponent:requestPath];
+        NSString *source = [NSString stringWithContentsOfURL:path encoding:NSUTF8StringEncoding error:nil];
+    
+        NSString *jsCode = [NSString stringWithFormat:@"handleXHRResponse(%@, \"%@\")",
+                            requestId, [self quoteString: source]];
+        [wkWebView evaluateJavaScript:jsCode completionHandler:nil];
+    }];
+}
+
+- (NSString *)quoteString:(NSString *)str
+{
+    NSData *data = [NSJSONSerialization dataWithJSONObject:@[str] options:0 error:nil];
+    NSString *jsonString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    return [jsonString substringWithRange:NSMakeRange(2, jsonString.length-4)];
+}
+
 
 #pragma mark WKNavigationDelegate implementation
 
