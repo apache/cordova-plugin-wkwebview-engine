@@ -63,7 +63,7 @@
   debugger;
 
   // add bypass
-  var allBypass = ["addEventListener", "dispatchEvent", "abort", "getAllResponseHeaders", "getResponseHeader", "overrideMimeType", "setRequestHeader"];
+  var allBypass = ["addEventListener", "removeEventListener", "dispatchEvent", "abort", "getAllResponseHeaders", "getResponseHeader", "overrideMimeType", "setRequestHeader"];
   allBypass.forEach(function (item) {
     XMLHttpRequest.prototype[item] = function () {
       return this.originalXHR[item].apply(this.originalXHR, arguments);
