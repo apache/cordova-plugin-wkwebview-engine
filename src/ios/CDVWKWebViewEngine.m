@@ -265,6 +265,10 @@
 - (WKUserScript*)xhrPolyfillScript
 {
     NSString *scriptFile = [[NSBundle mainBundle] pathForResource:@"www/xhr" ofType:@"js"];
+    if (scriptFile == nil) {
+        NSLog(@"XHR polyfill was not found!");
+        return nil;
+    }
     NSString *source = [NSString stringWithContentsOfFile:scriptFile encoding:NSUTF8StringEncoding error:nil];
     return [[WKUserScript alloc] initWithSource:source
                                   injectionTime:WKUserScriptInjectionTimeAtDocumentStart
