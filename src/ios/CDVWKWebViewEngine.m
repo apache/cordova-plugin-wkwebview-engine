@@ -57,13 +57,12 @@
         WKUserContentController* userContentController = [[WKUserContentController alloc] init];
         [userContentController addScriptMessageHandler:self name:CDV_BRIDGE_NAME];
         [userContentController addScriptMessageHandler:self name:CDV_IONIC_WK];
-        [userContentController addUserScript:[self wkionicScript]];
+        [userContentController addUserScript:[self xhrPolyfillScript]];
 
         WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
         configuration.userContentController = userContentController;
 
         WKWebView* wkWebView = [[WKWebView alloc] initWithFrame:frame configuration:configuration];
-
         wkWebView.UIDelegate = self.uiDelegate;
 
         self.engineWebView = wkWebView;
@@ -97,7 +96,7 @@
     [self updateSettings:self.commandDelegate.settings];
 
     // check if content thread has died on resume
-    NSLog(@"%@", @"CDVWKWebViewEngine will reload WKWebView if required on resume");
+    NSLog(@"CDVWKWebViewEngine will reload WKWebView if required on resume");
     [[NSNotificationCenter defaultCenter]
         addObserver:self
            selector:@selector(onAppWillEnterForeground:)
@@ -115,13 +114,13 @@
     BOOL reload = ((title == nil) || [title isEqualToString:@""]);
 
 #ifdef DEBUG
-    NSLog(@"%@", @"CDVWKWebViewEngine reloadIfRequired");
+    NSLog(@"CDVWKWebViewEngine reloadIfRequired");
     NSLog(@"CDVWKWebViewEngine reloadIfRequired WKWebView.title: %@", title);
     NSLog(@"CDVWKWebViewEngine reloadIfRequired reload: %u", reload);
 #endif
 
     if (reload) {
-        NSLog(@"%@", @"CDVWKWebViewEngine reloading!");
+        NSLog(@"CDVWKWebViewEngine reloading!");
         [wkWebView reload];
     }
     return reload;
@@ -202,7 +201,7 @@
             }
         }
     }
-    
+
     wkWebView.scrollView.scrollEnabled = [settings cordovaFloatSettingForKey:@"ScrollEnabled" defaultValue:YES];
 
     NSString* decelerationSetting = [settings cordovaSettingForKey:@"WKWebViewDecelerationSpeed"];
@@ -263,7 +262,7 @@
     return self.engineWebView;
 }
 
-- (WKUserScript*) wkionicScript
+- (WKUserScript*)xhrPolyfillScript
 {
     NSString *scriptFile = [[NSBundle mainBundle] pathForResource:@"www/xhr" ofType:@"js"];
     NSString *source = [NSString stringWithContentsOfFile:scriptFile encoding:NSUTF8StringEncoding error:nil];
@@ -283,14 +282,14 @@
     }
 }
 
-- (void) handleCordovaMessage:(WKScriptMessage*)message
+- (void)handleCordovaMessage:(WKScriptMessage*)message
 {
     CDVViewController* vc = (CDVViewController*)self.viewController;
-    
+
     NSArray* jsonEntry = message.body; // NSString:callbackId, NSString:service, NSString:action, NSArray:args
     CDVInvokedUrlCommand* command = [CDVInvokedUrlCommand commandFromJson:jsonEntry];
     CDV_EXEC_LOG(@"Exec(%@): Calling %@.%@", command.callbackId, command.className, command.methodName);
-    
+
     if (![vc.commandQueue execute:command]) {
 #ifdef DEBUG
         NSError* error = nil;
@@ -298,51 +297,75 @@
         NSData* jsonData = [NSJSONSerialization dataWithJSONObject:jsonEntry
                                                            options:0
                                                              error:&error];
-        
+
         if (error == nil) {
             commandJson = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
         }
-        
+
         static NSUInteger maxLogLength = 1024;
         NSString* commandString = ([commandJson length] > maxLogLength) ?
         [NSString stringWithFormat : @"%@[...]", [commandJson substringToIndex:maxLogLength]] :
         commandJson;
-        
+
         NSLog(@"FAILED pluginJSON = %@", commandString);
 #endif
     }
 }
 
-- (void)handleXHRMessage:(WKScriptMessage*)message
+- (void)handleXHRMessage:(WKScriptMessage *)message
 {
-    NSArray *parts = [message.body componentsSeparatedByString:@"->"];
-    if (parts.count != 2) {
+    NSString *str = message.body;
+    if (!str || ![str isKindOfClass:[NSString class]] || [str length] < 4) {
+        NSLog(@"Invalid XHR request");
         return;
     }
-    NSString *requestId = parts[0];
-    NSString *requestPath = parts[1];
-    
-    [self sendXHRResponse:requestId path: requestPath];
+	NSData *data = [message.body dataUsingEncoding:NSUTF8StringEncoding];
+    NSError *error = nil;
+    NSDictionary *request = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
+    if (!request || error != nil) {
+        NSLog(@"JSON response could not be parsed");
+        return;
+    }
+
+	NSNumber *reqID = request[@"id"];
+    if(!reqID || ![reqID isKindOfClass:[NSNumber class]]) {
+        NSLog(@"XHR's ID is invalid'");
+        return;
+    }
+	NSString *url = request[@"url"];
+    if(!url || ![url isKindOfClass:[NSString class]]) {
+        NSLog(@"XHR's URL is invalid'");
+        return;
+    }
+    [self sendXHRResponse:reqID path:url];
 }
 
-- (void)sendXHRResponse:(NSString *)requestId path:(NSString *)requestPath
+- (void)sendXHRResponse:(NSNumber *)requestId path:(NSString *)requestPath
 {
     [fileQueue addOperationWithBlock:^{
         WKWebView* wkWebView = (WKWebView*)_engineWebView;
         NSURL *path = [[[wkWebView URL] URLByDeletingLastPathComponent] URLByAppendingPathComponent:requestPath];
         NSString *source = [NSString stringWithContentsOfURL:path encoding:NSUTF8StringEncoding error:nil];
-    
-        NSString *jsCode = [NSString stringWithFormat:@"handleXHRResponse(%@, \"%@\")",
-                            requestId, [self quoteString: source]];
+        NSString *jsCode = [NSString stringWithFormat:@"handleXHRResponse(%@, %@)",
+                            [requestId stringValue], [self quoteString: source]];
         [wkWebView evaluateJavaScript:jsCode completionHandler:nil];
     }];
 }
 
 - (NSString *)quoteString:(NSString *)str
 {
-    NSData *data = [NSJSONSerialization dataWithJSONObject:@[str] options:0 error:nil];
+    NSError *error = nil;
+    NSData *data = [NSJSONSerialization dataWithJSONObject:@[str] options:0 error:&error];
+    if (!data || error != nil) {
+        NSLog(@"String escaping failed: JSON generation");
+        return nil;
+    }
     NSString *jsonString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    return [jsonString substringWithRange:NSMakeRange(2, jsonString.length-4)];
+    if(!jsonString || [jsonString length] < 4) {
+        NSLog(@"String escaping failed: JSON result");
+        return nil;
+    }
+    return [jsonString substringWithRange: NSMakeRange(1, jsonString.length-2)];
 }
 
 
@@ -392,7 +415,7 @@
     return NO;
 }
 
-- (void) webView: (WKWebView *) webView decidePolicyForNavigationAction: (WKNavigationAction*) navigationAction decisionHandler: (void (^)(WKNavigationActionPolicy)) decisionHandler
+- (void) webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction*)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
 {
     NSURL* url = [navigationAction.request URL];
     CDVViewController* vc = (CDVViewController*)self.viewController;
