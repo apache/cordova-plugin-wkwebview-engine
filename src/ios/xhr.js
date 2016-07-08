@@ -37,6 +37,7 @@
       } else {
         Object.defineProperty(XHRProxy.prototype, prop, {
           enumerable: true,
+          configurable: true,
           set: function (fn) {
             this[originalInstanceKey][prop] = fn;
           },
@@ -80,7 +81,7 @@
   XHRProxy.prototype.send = function _wk_send() {
     if (this.__fakeData) {
       this.__set('readyState', 3);
-      this.__fireEvent('ProgressEvent', 'loadstart');
+      //this.__fireEvent('ProgressEvent', 'loadstart');
       this.__fireEvent('Event', 'readystatechange');
       var url = this.__get('interceptedURL');
       return scheduleXHRRequest(this, url);
@@ -90,10 +91,29 @@
     return original.send.apply(original, arguments);
   };
 
+  XHRProxy.prototype.addEventListener = function _wk_addEventListener(eventName, callback) {
+    console.debug('_wk_addEventListener (WIP!)', eventName);
+    var original = this[originalInstanceKey];
+    return original.addEventListener.apply(original, arguments);
+  };
+
+  XHRProxy.prototype.removeEventListener = function _wk_removeEventListener(eventName, callback) {
+    console.debug('_wk_removeEventListener (WIP!)', eventName);
+    var original = this[originalInstanceKey];
+    return original.removeEventListener.apply(original, arguments);
+  };
+
   XHRProxy.prototype.__fireEvent = function _wk_fire(type, name) {
     var event = document.createEvent(type);
     event.initEvent(name, false, false);
-    this.dispatchEvent(event);
+    switch (name) {
+      case 'load':
+        this.onload && this.onload(event);
+        break;
+      default:
+        this.dispatchEvent(event);
+        break;
+    }
   };
 
   XHRProxy.prototype.__set = function _wk_set(key, value) {
@@ -138,7 +158,7 @@
 
     context.__fireEvent('Event', 'readystatechange');
     context.__fireEvent('UIEvent', 'load');
-    context.__fireEvent('ProgressEvent', 'loadend');
+    //context.__fireEvent('ProgressEvent', 'loadend');
   };
 
   window.handleXHRResponse = handleXHRResponse;
