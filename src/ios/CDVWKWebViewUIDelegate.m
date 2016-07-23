@@ -120,4 +120,15 @@
     [rootController presentViewController:alert animated:YES completion:nil];
 }
 
+- (void)                        _webView:(WKWebView *)webView
+    decideDatabaseQuotaForSecurityOrigin:(WKSecurityOrigin *)securityOrigin
+                            currentQuota:(unsigned long long)currentQuota
+                      currentOriginUsage:(unsigned long long)currentOriginUsage
+                    currentDatabaseUsage:(unsigned long long)currentUsage
+                           expectedUsage:(unsigned long long)expectedUsage
+                         decisionHandler:(void (^)(unsigned long long newQuota))decisionHandler {
+    decisionHandler(1024*1024*50); //default to 50MB
+}
+
+
 @end
