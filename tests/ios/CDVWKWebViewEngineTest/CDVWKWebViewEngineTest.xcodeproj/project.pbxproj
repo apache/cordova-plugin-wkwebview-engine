@@ -285,12 +285,14 @@
 		7E9F517619DA09CE00DA31AC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				OTHER_LDFLAGS = "-ObjC";
 			};
 			name = Debug;
 		};
 		7E9F517719DA09CE00DA31AC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				OTHER_LDFLAGS = "-ObjC";
 			};
 			name = Release;
 		};

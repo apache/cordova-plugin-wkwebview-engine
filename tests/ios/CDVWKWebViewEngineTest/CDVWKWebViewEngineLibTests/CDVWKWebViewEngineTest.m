@@ -20,10 +20,12 @@
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
 #import "CDVWKWebViewEngine.h"
+#import <Cordova/NSDictionary+CordovaPreferences.h>
 
 @interface CDVWKWebViewEngineTest : XCTestCase
 
 @property (nonatomic, strong) CDVWKWebViewEngine* plugin;
+@property (nonatomic, strong) CDVViewController* viewController;
 
 @end
 
@@ -39,7 +41,11 @@
     [super setUp];
     // Put setup code here. This method is called before the invocation of each test method in the class.
     
-    self.plugin = [[CDVWKWebViewEngine alloc] init];
+    self.plugin = [[CDVWKWebViewEngine alloc] initWithFrame:CGRectMake(0, 0, 100, 100)];
+    self.viewController = [[CDVViewController alloc] init];
+    [self.viewController registerPlugin:self.plugin withClassName:NSStringFromClass([self.plugin class])];
+    
+    XCTAssert([self.plugin conformsToProtocol:@protocol(CDVWebViewEngineProtocol)], @"Plugin does not conform to CDVWebViewEngineProtocol");
 }
 
 - (void)tearDown {
@@ -47,11 +53,65 @@
     [super tearDown];
 }
 
-- (void) testCDVWKWebViewEngine {
+- (void) testCanLoadRequest {
+    NSURLRequest* fileUrlRequest = [NSURLRequest requestWithURL:[NSURL fileURLWithPath:@"path/to/file.html"]];
+    NSURLRequest* httpUrlRequest = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://apache.org"]];
+    NSURLRequest* miscUrlRequest = [NSURLRequest requestWithURL:[NSURL URLWithString:@"foo://bar"]];
+    id<CDVWebViewEngineProtocol> webViewEngineProtocol = self.plugin;
     
-    // Failing tests
-    XCTAssertTrue(NO);
-    XCTAssertFalse(YES);
+    SEL wk_sel = NSSelectorFromString(@"loadFileURL:allowingReadAccessToURL:");
+    if ([self.plugin.engineWebView respondsToSelector:wk_sel]) {
+        XCTAssertTrue([webViewEngineProtocol canLoadRequest:fileUrlRequest]);
+    } else {
+        XCTAssertFalse([webViewEngineProtocol canLoadRequest:fileUrlRequest]);
+    }
+    
+    XCTAssertTrue([webViewEngineProtocol canLoadRequest:httpUrlRequest]);
+    XCTAssertTrue([webViewEngineProtocol canLoadRequest:miscUrlRequest]);
+}
+
+- (void) testUpdateInfo {
+    // Add -ObjC to Other Linker Flags to test project, to load Categories
+    // Update objc test template generator as well
+    
+    id<CDVWebViewEngineProtocol> webViewEngineProtocol = self.plugin;
+    WKWebView* wkWebView = (WKWebView*)self.plugin.engineWebView;
+    
+    NSDictionary* preferences = @{
+                               [@"MinimumFontSize" lowercaseString] : @1.1, // default is 0.0
+                               [@"AllowInlineMediaPlayback" lowercaseString] : @YES, // default is NO
+                               [@"MediaPlaybackRequiresUserAction" lowercaseString] : @NO, // default is YES
+                               [@"SuppressesIncrementalRendering" lowercaseString] : @YES, // default is NO
+                               [@"MediaPlaybackAllowsAirPlay" lowercaseString] : @NO, // default is YES
+                               [@"DisallowOverscroll" lowercaseString] : @YES, // so bounces is to be NO. defaults to NO
+                               [@"WKWebViewDecelerationSpeed" lowercaseString] : @"fast" // default is 'normal'
+                               };
+    NSDictionary* info = @{
+                           kCDVWebViewEngineWebViewPreferences : preferences
+                           };
+    [webViewEngineProtocol updateWithInfo:info];
+    
+    // the only preference we can set, we **can** change this during runtime
+    XCTAssertEqualWithAccuracy(wkWebView.configuration.preferences.minimumFontSize, 1.1, 0.0001);
+    
+    // the WKWebViewConfiguration properties, we **cannot** change outside of initialization
+    XCTAssertFalse(wkWebView.configuration.allowsInlineMediaPlayback);
+    XCTAssertTrue(wkWebView.configuration.mediaPlaybackRequiresUserAction);
+    XCTAssertFalse(wkWebView.configuration.suppressesIncrementalRendering);
+    XCTAssertTrue(wkWebView.configuration.mediaPlaybackAllowsAirPlay);
+    
+    // in the test above, DisallowOverscroll is YES, so no bounce
+    if ([wkWebView respondsToSelector:@selector(scrollView)]) {
+        XCTAssertFalse(((UIScrollView*)[wkWebView scrollView]).bounces);
+    } else {
+        for (id subview in wkWebView.subviews) {
+            if ([[subview class] isSubclassOfClass:[UIScrollView class]]) {
+                XCTAssertFalse(((UIScrollView*)subview).bounces = NO);
+            }
+        }
+    }
+    
+    XCTAssertTrue(wkWebView.scrollView.decelerationRate == UIScrollViewDecelerationRateFast);
 }
 
 @end
