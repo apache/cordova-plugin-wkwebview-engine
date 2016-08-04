@@ -47,31 +47,45 @@
         if (NSClassFromString(@"WKWebView") == nil) {
             return nil;
         }
-        self.uiDelegate = [[CDVWKWebViewUIDelegate alloc] initWithTitle:[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"]];
 
-        WKUserContentController* userContentController = [[WKUserContentController alloc] init];
-        [userContentController addScriptMessageHandler:self name:CDV_BRIDGE_NAME];
-
-        WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
-        configuration.userContentController = userContentController;
-
-        WKWebView* wkWebView = [[WKWebView alloc] initWithFrame:frame configuration:configuration];
-
-        wkWebView.UIDelegate = self.uiDelegate;
-
-        self.engineWebView = wkWebView;
-
-        NSLog(@"Using WKWebView");
+        self.engineWebView = [[WKWebView alloc] initWithFrame:frame];
     }
 
     return self;
 }
 
+- (WKWebViewConfiguration*) createConfigurationFromSettings:(NSDictionary*)settings
+{
+    WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
+    if (settings == nil) {
+        return configuration;
+    }
+
+    configuration.allowsInlineMediaPlayback = [settings cordovaBoolSettingForKey:@"AllowInlineMediaPlayback" defaultValue:NO];
+    configuration.mediaPlaybackRequiresUserAction = [settings cordovaBoolSettingForKey:@"MediaPlaybackRequiresUserAction" defaultValue:YES];
+    configuration.suppressesIncrementalRendering = [settings cordovaBoolSettingForKey:@"SuppressesIncrementalRendering" defaultValue:NO];
+    configuration.mediaPlaybackAllowsAirPlay = [settings cordovaBoolSettingForKey:@"MediaPlaybackAllowsAirPlay" defaultValue:YES];
+
+    return configuration;
+}
+
 - (void)pluginInitialize
 {
     // viewController would be available now. we attempt to set all possible delegates to it, by default
+    NSDictionary* settings = self.commandDelegate.settings;
 
-    WKWebView* wkWebView = (WKWebView*)_engineWebView;
+    self.uiDelegate = [[CDVWKWebViewUIDelegate alloc] initWithTitle:[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"]];
+
+    WKUserContentController* userContentController = [[WKUserContentController alloc] init];
+    [userContentController addScriptMessageHandler:self name:CDV_BRIDGE_NAME];
+
+    WKWebViewConfiguration* configuration = [self createConfigurationFromSettings:settings];
+    configuration.userContentController = userContentController;
+
+    // re-create WKWebView, since we need to update configuration
+    WKWebView* wkWebView = [[WKWebView alloc] initWithFrame:self.engineWebView.frame configuration:configuration];
+    wkWebView.UIDelegate = self.uiDelegate;
+    self.engineWebView = wkWebView;
 
     if ([self.viewController conformsToProtocol:@protocol(WKUIDelegate)]) {
         wkWebView.UIDelegate = (id <WKUIDelegate>)self.viewController;
@@ -87,7 +101,7 @@
         [wkWebView.configuration.userContentController addScriptMessageHandler:(id < WKScriptMessageHandler >)self.viewController name:@"cordova"];
     }
 
-    [self updateSettings:self.commandDelegate.settings];
+    [self updateSettings:settings];
 
     // check if content thread has died on resume
     NSLog(@"%@", @"CDVWKWebViewEngine will reload WKWebView if required on resume");
@@ -95,6 +109,8 @@
         addObserver:self
            selector:@selector(onAppWillEnterForeground:)
                name:UIApplicationWillEnterForegroundNotification object:nil];
+
+    NSLog(@"Using WKWebView");
 }
 
 - (void) onAppWillEnterForeground:(NSNotification*)notification {
@@ -174,10 +190,6 @@
     WKWebView* wkWebView = (WKWebView*)_engineWebView;
 
     wkWebView.configuration.preferences.minimumFontSize = [settings cordovaFloatSettingForKey:@"MinimumFontSize" defaultValue:0.0];
-    wkWebView.configuration.allowsInlineMediaPlayback = [settings cordovaBoolSettingForKey:@"AllowInlineMediaPlayback" defaultValue:NO];
-    wkWebView.configuration.mediaPlaybackRequiresUserAction = [settings cordovaBoolSettingForKey:@"MediaPlaybackRequiresUserAction" defaultValue:YES];
-    wkWebView.configuration.suppressesIncrementalRendering = [settings cordovaBoolSettingForKey:@"SuppressesIncrementalRendering" defaultValue:NO];
-    wkWebView.configuration.mediaPlaybackAllowsAirPlay = [settings cordovaBoolSettingForKey:@"MediaPlaybackAllowsAirPlay" defaultValue:YES];
 
     /*
      wkWebView.configuration.preferences.javaScriptEnabled = [settings cordovaBoolSettingForKey:@"JavaScriptEnabled" default:YES];
