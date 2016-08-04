@@ -208,6 +208,8 @@
 
     if (![@"fast" isEqualToString:decelerationSetting]) {
         [wkWebView.scrollView setDecelerationRate:UIScrollViewDecelerationRateNormal];
+    } else {
+        [wkWebView.scrollView setDecelerationRate:UIScrollViewDecelerationRateFast];
     }
 }
 
