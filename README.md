@@ -20,21 +20,21 @@
 Cordova WKWebView Engine
 ======
 
-This plugin is an extension of the [Apache Cordova WKWebView plugin](https://github.com/apache/cordova-plugin-wkwebview-engine). It includes enhancements to resolve some of the issues surrounding XHR requests and resolves some DOM exception issues. Ionic is working with the cordova team
-to get the changes merged into the official Cordova plugin. After the beta testing period, our hope is to make this plugin a default part of Ionic.
+This plugin is an extension of the [Apache Cordova WKWebView plugin](https://github.com/apache/cordova-plugin-wkwebview-engine). It includes enhancements to resolve some of the issues surrounding XHR requests, along with some DOM exception issues. Ionic is working with the Cordova team
+to fully test these changes with the eventual goal of merging the updates into the official Cordova plugin. After the beta testing period, our hope is to make the WKWebView plugin an Ionic default so all users can easily take advantage of this plugin's improved performance over UIWebView.
 
-This plugin is only used by iOS, so ensure the `cordova-ios` platform is installed. This plugin requires the `cordova-ios` platform version to be `4.0` or greater.
+The WKWebView plugin is only used by iOS, so ensure the `cordova-ios` platform is installed. Additionly, the `cordova-ios` platform version must be `4.0` or greater.
 
 Installation Instructions
 -------------------
 
-Ensure the latest Cordova CLI is installed.  Sudo may or may not be required.
+Ensure the latest Cordova CLI is installed:  (Sudo may be required)
 
 ```
-sudo npm install cordova -g
+npm install cordova -g
 ```
 
-Ensure the iOS platform has been added
+Ensure the `ios` platform has been added:
 
 ```
 ionic platform ls
@@ -50,24 +50,24 @@ If the iOS platform is installed but the version is < `4.x`, run the following c
 
 ```
 ionic platform update ios
-ionic plugin save (creates backup of existing plugins)
-rm -rf ./plugins (delete plugins)
-ionic prepare (re-install plugins compatible with cordova-ios 4.x)
+ionic plugin save           # creates backup of existing plugins
+rm -rf ./plugins            # delete plugins directory
+ionic prepare               # re-install plugins compatible with cordova-ios 4.x
 ```
 
-Install the WKWebViewPlugin
+Install the WKWebViewPlugin:
 
 ```
 ionic plugin add https://github.com/driftyco/cordova-plugin-wkwebview-engine.git --save
 ```
 
-Build the platform
+Build the platform:
 
 ```
 ionic prepare
 ```
 
-Test the app of an iOS 9 or 10 device
+Test the app of an iOS 9 or 10 device:
 
 ```
 ionic run ios
@@ -76,8 +76,8 @@ ionic run ios
 An easy way to verify that WKWebView has been installed on iOS is to check if `window.indexedDB` exists.  For example:
 
 ```
-if ( window.indexedDB ) {
-   console.log("I'm in WKWebView!")
+if (window.indexedDB) {
+   console.log("I'm in WKWebView!");
 } else {
    console.log("I'm in UIWebView");
 }
