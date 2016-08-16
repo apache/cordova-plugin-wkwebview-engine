@@ -23,6 +23,8 @@ Cordova WKWebView Engine
 This plugin is an extension of the [Apache Cordova WKWebView plugin](https://github.com/apache/cordova-plugin-wkwebview-engine). It includes enhancements to resolve some of the issues surrounding XHR requests, along with some DOM exception issues. Ionic is working with the Cordova team
 to fully test these changes with the eventual goal of merging the updates into the official Cordova plugin. After the beta testing period, our hope is to make the WKWebView plugin an Ionic default so all users can easily take advantage of this plugin's improved performance over UIWebView.
 
+This plugin only supports iOS 9 and above.
+
 The WKWebView plugin is only used by iOS, so ensure the `cordova-ios` platform is installed. Additionly, the `cordova-ios` platform version must be `4.0` or greater.
 
 Installation Instructions
@@ -82,3 +84,25 @@ if (window.indexedDB) {
    console.log("I'm in UIWebView");
 }
 ```
+
+Required Permissions
+-------------------
+WKWebView may not fully launch (the deviceready event may not fire) unless if the following is included in config.xml:
+#### config.xml
+```
+<feature name="CDVWKWebViewEngine">
+  <param name="ios-package" value="CDVWKWebViewEngine" />
+</feature>
+
+<preference name="CordovaWebViewEngine" value="CDVWKWebViewEngine" />
+```
+
+Application Transport Security (ATS) in iOS 9
+-----------
+
+The next released version of the [cordova-cli 5.4.0](https://www.npmjs.com/package/cordova) will support automatic conversion of the [&lt;access&gt;](http://cordova.apache.org/docs/en/edge/guide/appdev/whitelist/index.html) tags in config.xml to Application Transport Security [ATS](https://developer.apple.com/library/prerelease/ios/documentation/General/Reference/InfoPlistKeyReference/Articles/CocoaKeys.html#//apple_ref/doc/uid/TP40009251-SW33) directives. Upgrade to the version 5.4.0 to use this new functionality.
+
+Apple Issues
+-------
+
+The `AllowInlineMediaPlayback` preference will not work because of this [Apple bug](http://openradar.appspot.com/radar?id=6673091526656000). This bug [has been fixed](https://issues.apache.org/jira/browse/CB-11452) in [iOS 10](https://twitter.com/shazron/status/745546355796389889).
