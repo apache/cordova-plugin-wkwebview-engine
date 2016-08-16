@@ -67,7 +67,7 @@ Build the platform:
 ionic prepare
 ```
 
-Test the app of an iOS 9 or 10 device:
+Test the app on an iOS 9 or 10 device:
 
 ```
 ionic run ios
