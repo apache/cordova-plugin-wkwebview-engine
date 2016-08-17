@@ -17,75 +17,97 @@
 #         under the License.
 -->
 
-[![Build Status](https://travis-ci.org/apache/cordova-plugin-wkwebview-engine.svg?branch=master)](https://travis-ci.org/apache/cordova-plugin-wkwebview-engine)
-
 Cordova WKWebView Engine
 ======
 
-This plugin makes `Cordova` use the `WKWebView` component instead of the default `UIWebView` component, and is installable only on a system with the iOS 9.0 SDK. 
+This plugin is an extension of the [Apache Cordova WKWebView plugin](https://github.com/apache/cordova-plugin-wkwebview-engine). It includes enhancements to resolve some of the issues surrounding XHR requests, along with some DOM exception issues. Ionic is working with the Cordova team
+to fully test these changes with the eventual goal of merging the updates into the official Cordova plugin. After the beta testing period, our hope is to make the WKWebView plugin an Ionic default so all users can easily take advantage of this plugin's improved performance over UIWebView.
 
-In iOS 9, Apple has fixed the [issue](http://www.openradar.me/18039024) present through iOS 8 where you cannot load locale files using file://, and must resort to using a local webserver. **However, you are still not able to use XHR from the file:// protocol without [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS) enabled on your server.**
+This plugin only supports iOS 9 and above.
 
-Installation
------------
+The WKWebView plugin is only used by iOS, so ensure the `cordova-ios` platform is installed. Additionly, the `cordova-ios` platform version must be `4.0` or greater.
 
-This plugin needs cordova-ios >4.0.0.
+Installation Instructions
+-------------------
 
-To install the current release:
+Ensure the latest Cordova CLI is installed:  (Sudo may be required)
 
-    cordova create wkwvtest my.project.id wkwvtest
-    cd wkwvtest
-    cordova platform add ios@4
-    cordova plugin add cordova-plugin-wkwebview-engine
+```
+npm install cordova -g
+```
 
-To test the development version:
+Ensure the `ios` platform has been added:
 
-    cordova create wkwvtest my.project.id wkwvtest
-    cd wkwvtest
-    cordova platform add https://github.com/apache/cordova-ios.git#master
-    cordova plugin add https://github.com/apache/cordova-plugin-wkwebview-engine.git#master
+```
+ionic platform ls
+```
 
-You also must have Xcode 7 (iOS 9 SDK) installed. Check your Xcode version by running:
+If the iOS platform is not listed, run the following command:
 
-    xcode-select --print-path
+```
+ionic platform add ios
+```
+
+If the iOS platform is installed but the version is < `4.x`, run the following commands:
+
+```
+ionic platform update ios
+ionic plugin save           # creates backup of existing plugins
+rm -rf ./plugins            # delete plugins directory
+ionic prepare               # re-install plugins compatible with cordova-ios 4.x
+```
+
+Install the WKWebViewPlugin:
+
+```
+ionic plugin add https://github.com/driftyco/cordova-plugin-wkwebview-engine.git --save
+```
+
+Build the platform:
+
+```
+ionic prepare
+```
+
+Test the app on an iOS 9 or 10 device:
+
+```
+ionic run ios
+```
+
+An easy way to verify that WKWebView has been installed on iOS is to check if `window.indexedDB` exists.  For example:
+
+```
+if (window.indexedDB) {
+   console.log("I'm in WKWebView!");
+} else {
+   console.log("I'm in UIWebView");
+}
+```
 
 Required Permissions
------------
+-------------------
 WKWebView may not fully launch (the deviceready event may not fire) unless if the following is included in config.xml:
 #### config.xml
+```
+<feature name="CDVWKWebViewEngine">
+  <param name="ios-package" value="CDVWKWebViewEngine" />
+</feature>
 
-        <feature name="CDVWKWebViewEngine">
-            <param name="ios-package" value="CDVWKWebViewEngine" />
-        </feature>
-
-        <preference name="CordovaWebViewEngine" value="CDVWKWebViewEngine" />
-
-
-Notes
-------
-
-On an iOS 8 system, Apache Cordova during runtime will switch to using the UIWebView engine instead of using this plugin. If you want to use WKWebView on both iOS 8 and iOS 9 platforms, you will have to resort to using a local webserver.
-
-We have an [experimental plugin](https://github.com/apache/cordova-plugins/tree/master/wkwebview-engine-localhost) that does this. You would use that plugin instead of this one.
+<preference name="CordovaWebViewEngine" value="CDVWKWebViewEngine" />
+```
 
 Application Transport Security (ATS) in iOS 9
 -----------
 
 The next released version of the [cordova-cli 5.4.0](https://www.npmjs.com/package/cordova) will support automatic conversion of the [&lt;access&gt;](http://cordova.apache.org/docs/en/edge/guide/appdev/whitelist/index.html) tags in config.xml to Application Transport Security [ATS](https://developer.apple.com/library/prerelease/ios/documentation/General/Reference/InfoPlistKeyReference/Articles/CocoaKeys.html#//apple_ref/doc/uid/TP40009251-SW33) directives. Upgrade to the version 5.4.0 to use this new functionality.
 
-Limitations
---------
-
-If you are upgrading from UIWebView, please note the limitations of using WKWebView as outlined in our [issue tracker](https://issues.apache.org/jira/issues/?jql=project%20%3D%20CB%20AND%20labels%20%3D%20wkwebview-known-issues).
-
 Apple Issues
 -------
 
-The `AllowInlineMediaPlayback` preference will not work because of this [Apple bug](http://openradar.appspot.com/radar?id=6673091526656000). This bug [has been fixed](https://issues.apache.org/jira/browse/CB-11452) in [iOS 10](https://twitter.com/shazron/status/745546355796389889). 
+The `AllowInlineMediaPlayback` preference will not work because of this [Apple bug](http://openradar.appspot.com/radar?id=6673091526656000). This bug [has been fixed](https://issues.apache.org/jira/browse/CB-11452) in [iOS 10](https://twitter.com/shazron/status/745546355796389889).
 
+Limitations
+--------
 
-
-Supported Platforms
--------------------
-
-- iOS
+There are several [known issues](https://issues.apache.org/jira/issues/?jql=project%20%3D%20CB%20AND%20labels%20%3D%20wkwebview-known-issues) with the official Cordova WKWebView plugin. The Ionic team thinks we have resolved several of the major issues. Please [let us know](https://github.com/driftyco/cordova-plugin-wkwebview-engine/issues) if something isn't working as expected.
