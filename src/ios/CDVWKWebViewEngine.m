@@ -364,7 +364,7 @@
 
 - (void)sendXHRResponse:(NSNumber *)requestId path:(NSString *)requestPath
 {
-    [fileQueue addOperationWithBlock:^{
+    [self.fileQueue addOperationWithBlock:^{
         WKWebView* wkWebView = (WKWebView*)_engineWebView;
         NSURL *path = [[[wkWebView URL] URLByDeletingLastPathComponent] URLByAppendingPathComponent:requestPath];
         NSString *source = [NSString stringWithContentsOfURL:path encoding:NSUTF8StringEncoding error:nil];
