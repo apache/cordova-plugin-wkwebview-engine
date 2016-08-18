@@ -1,4 +1,4 @@
-
+/*jshint loopfunc: true */
 (function _wk_xhr_proxy() {
   if (!window.webkit.messageHandlers) {
     return;
