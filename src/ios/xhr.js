@@ -1,67 +1,68 @@
-/*jshint loopfunc: true */
 (function _wk_xhr_proxy() {
+  // Check if we are running in WKWebView
   if (!window.webkit.messageHandlers) {
     return;
   }
 
+  var originalReferenceKey = '__wk_original';
   var xhrMessager = window.webkit.messageHandlers.xhr;
   var loc = window.location.protocol;
+
+  // Do not hijack XHR if location is not file:
   if (!xhrMessager || loc !== 'file:') {
     return;
   }
 
-  var originalInstanceKey = '__wk_original';
-
-  // Adapted from zone.js
-  var OriginalClass = window.XMLHttpRequest;
-
-  if (!OriginalClass) {
+  // Get original XHR implementaton
+  var OriginalXHR = window.XMLHttpRequest;
+  if (!OriginalXHR) {
     console.error('XMLHttpRequest does not exist!??');
     return;
   }
 
+  // Constructs the XHR proxy
   var XHRProxy = function () {
     this.__fakeData = null;
     this.__fakeListeners = {};
-    this[originalInstanceKey] = new OriginalClass();
+    this[originalReferenceKey] = new OriginalXHR();
   };
+  var XHRPrototype = XHRProxy.prototype;
+  var xhrInstance = new OriginalXHR(function () {});
 
-  var instance = new OriginalClass(function () {});
-
-  var prop;
-  for (prop in instance) {
-    (function (prop) {
-      if (typeof instance[prop] === 'function') {
-        XHRProxy.prototype[prop] = function () {
-          return this[originalInstanceKey][prop].apply(this[originalInstanceKey], arguments);
-        };
-      } else {
-        Object.defineProperty(XHRProxy.prototype, prop, {
-          enumerable: true,
-          configurable: true,
-          set: function (fn) {
-            this[originalInstanceKey][prop] = fn;
-          },
-          get: function () {
-            var v = this.__get(prop);
-            if (v !== undefined) {
-              return v;
-            }
-            return this[originalInstanceKey][prop];
+  // XHRProxy must proxy all methods/properties of the base class
+  function configProperty(property) {
+    if (typeof xhrInstance[property] === 'function') {
+      XHRPrototype[property] = function () {
+        return this[originalReferenceKey][property].apply(this[originalReferenceKey], arguments);
+      };
+    } else {
+      Object.defineProperty(XHRPrototype, property, {
+        enumerable: true,
+        configurable: true,
+        set: function (f) {
+          this[originalReferenceKey][property] = f;
+        },
+        get: function () {
+          var v = this.__get(property);
+          if (v !== undefined) {
+            return v;
           }
-        });
-      }
-    }(prop));
+          return this[originalReferenceKey][property];
+        }
+      });
+    }
   }
-
-  for (prop in OriginalClass) {
-    if (prop !== 'prototype' && OriginalClass.hasOwnProperty(prop)) {
-      XHRProxy[prop] = OriginalClass[prop];
+  for (property in xhrInstance) {
+    configProperty(property);
+  }
+  for (property in OriginalXHR) {
+    if (property !== 'prototype' && OriginalXHR.hasOwnProperty(property)) {
+      XHRProxy[property] = OriginalXHR[property];
     }
   }
 
-  // Patch XML class
-  XHRProxy.prototype.open = function _wk_open(method, url, async) {
+
+  XHRPrototype.open = function _wk_open(method, url, async) {
     if (!(/^[a-zA-Z0-9]+:\/\//.test(url))) {
       console.debug("WK intercepted XHR:", url);
       this.__set('readyState', 1); // OPENED
@@ -75,11 +76,11 @@
         throw new Error("wk does not support sync XHR.");
       }
     }
-    var original = this[originalInstanceKey];
+    var original = this[originalReferenceKey];
     return original.open.apply(original, arguments);
   };
 
-  XHRProxy.prototype.send = function _wk_send() {
+  XHRPrototype.send = function _wk_send() {
     if (this.__fakeData) {
       this.__set('readyState', 3);
       this.__fireEvent('Event', 'readystatechange');
@@ -87,22 +88,22 @@
       return scheduleXHRRequest(this, url);
     }
 
-    var original = this[originalInstanceKey];
+    var original = this[originalReferenceKey];
     return original.send.apply(original, arguments);
   };
 
-  XHRProxy.prototype.addEventListener = function _wk_addEventListener(eventName, handler) {
+  XHRPrototype.addEventListener = function _wk_addEventListener(eventName, handler) {
     console.debug('_wk_addEventListener', eventName);
     if (this.__fakeListeners.hasOwnProperty(eventName)) {
       this.__fakeListeners[eventName].push(handler);
     } else {
       this.__fakeListeners[eventName] = [handler];
     }
-    var original = this[originalInstanceKey];
+    var original = this[originalReferenceKey];
     return original.addEventListener.apply(original, arguments);
   };
 
-  XHRProxy.prototype.removeEventListener = function _wk_removeEventListener(eventName, handler) {
+  XHRPrototype.removeEventListener = function _wk_removeEventListener(eventName, handler) {
     console.debug('_wk_removeEventListener', eventName);
     if (!this.__fakeListeners.hasOwnProperty(eventName)) {
       return;
@@ -112,11 +113,11 @@
     if (index !== -1) {
       this.__fakeListeners[eventName].splice(index, 1);
     }
-    var original = this[originalInstanceKey];
+    var original = this[originalReferenceKey];
     return original.removeEventListener.apply(original, arguments);
   };
 
-  XHRProxy.prototype.__fireEvent = function _wk_fireEvent(type, name) {
+  XHRPrototype.__fireEvent = function _wk_fireEvent(type, name) {
     var handlers = null;
     var event = document.createEvent(type);
     event.initEvent(name, false, false);
@@ -138,14 +139,14 @@
     }
   };
 
-  XHRProxy.prototype.__set = function _wk_set(key, value) {
+  XHRPrototype.__set = function _wk_set(key, value) {
     if (!this.__fakeData) {
       this.__fakeData = {};
     }
     this.__fakeData['__' + key] = value;
   };
 
-  XHRProxy.prototype.__get = function _wk_get(key) {
+  XHRPrototype.__get = function _wk_get(key) {
     if (this.__fakeData) {
       return this.__fakeData['__' + key];
     }
