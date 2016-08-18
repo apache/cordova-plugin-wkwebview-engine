@@ -10,7 +10,7 @@
     return;
   }
 
-  var originalInstanceKey = '__wk_original'
+  var originalInstanceKey = '__wk_original';
 
   // Adapted from zone.js
   var OriginalClass = window.XMLHttpRequest;
@@ -72,11 +72,11 @@
       this.__fireEvent('Event', 'readystatechange');
 
       if (async === false) {
-        throw new Error("wk does not support sync XHR.")
+        throw new Error("wk does not support sync XHR.");
       }
     }
     var original = this[originalInstanceKey];
-    return this[originalInstanceKey].open.apply(this[originalInstanceKey], arguments);
+    return original.open.apply(original, arguments);
   };
 
   XHRProxy.prototype.send = function _wk_send() {
@@ -117,11 +117,12 @@
   };
 
   XHRProxy.prototype.__fireEvent = function _wk_fireEvent(type, name) {
+    var handlers = null;
     var event = document.createEvent(type);
     event.initEvent(name, false, false);
 
     if (this.__fakeListeners.hasOwnProperty(name)) {
-      var handlers = this.__fakeListeners[name];
+      handlers = this.__fakeListeners[name];
       for (var i = 0; i < handlers.length; i++) {
         try {
           handlers[i](event);
@@ -129,6 +130,11 @@
           console.error(e);
         }
       }
+    }
+
+    var handler = this['on' + name];
+    if (handler && (!handlers || handlers.indexOf(handler) === -1)) {
+      handler(event);
     }
   };
 
@@ -157,7 +163,7 @@
       url: url
     }));
     reqId++;
-  };
+  }
 
   function handleXHRResponse(id, body) {
     var context = requests[id];
@@ -174,7 +180,7 @@
 
     context.__fireEvent('Event', 'readystatechange');
     context.__fireEvent('UIEvent', 'load');
-  };
+  }
 
   window.handleXHRResponse = handleXHRResponse;
   window.XMLHttpRequest = XHRProxy;
