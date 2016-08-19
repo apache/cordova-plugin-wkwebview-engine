@@ -346,20 +346,20 @@
         NSLog(@"Invalid XHR request");
         return;
     }
-	NSData *data = [message.body dataUsingEncoding:NSUTF8StringEncoding];
+    NSData *data = [message.body dataUsingEncoding:NSUTF8StringEncoding];
     NSError *error = nil;
     NSDictionary *request = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
     if (!request || error != nil) {
         NSLog(@"JSON response could not be parsed");
         return;
     }
-
-	NSNumber *reqID = request[@"id"];
+    
+    NSNumber *reqID = request[@"id"];
     if(!reqID || ![reqID isKindOfClass:[NSNumber class]]) {
         NSLog(@"XHR's ID is invalid'");
         return;
     }
-	NSString *url = request[@"url"];
+    NSString *url = request[@"url"];
     if(!url || ![url isKindOfClass:[NSString class]]) {
         NSLog(@"XHR's URL is invalid'");
         return;
@@ -367,32 +367,87 @@
     [self sendXHRResponse:reqID path:url];
 }
 
+
+- (NSURL *)securePathAppend:(NSString *)relativePath
+{
+    if (relativePath == nil || [relativePath length] == 0) {
+        NSLog(@"requested path is empty");
+        return nil;
+    }
+    
+    if ([relativePath isAbsolutePath]) {
+        NSLog(@"requested path is an absolute path");
+        return nil;
+    }
+
+    NSURL *base = [[(WKWebView*)_engineWebView URL] URLByDeletingLastPathComponent];
+    NSURL *final = [[base URLByAppendingPathComponent:relativePath] standardizedURL];
+    
+    // Security sensitive
+    // Ensure URL does not leave the base URL
+    if (![[final absoluteString] hasPrefix:[base absoluteString]]) {
+        NSLog(@"requested path can not be accessed: %@", final);
+        return nil;
+    }
+    
+    return final;
+    
+}
+
 - (void)sendXHRResponse:(NSNumber *)requestId path:(NSString *)requestPath
 {
     [self.fileQueue addOperationWithBlock:^{
-        WKWebView* wkWebView = (WKWebView*)_engineWebView;
-        NSURL *path = [[[wkWebView URL] URLByDeletingLastPathComponent] URLByAppendingPathComponent:requestPath];
-        NSString *source = [NSString stringWithContentsOfURL:path encoding:NSUTF8StringEncoding error:nil];
-        NSString *jsCode = [NSString stringWithFormat:@"handleXHRResponse(%@, %@)",
-                            [requestId stringValue], [self quoteString: source]];
-        [wkWebView evaluateJavaScript:jsCode completionHandler:nil];
+        if (requestId == nil) {
+            NSLog(@"requestID is empty");
+            return;
+        }
+        
+        if ([requestId integerValue] <= 0) {
+            NSLog(@"invalid requestID");
+            return;
+        }
+        NSURL *path = [self securePathAppend: requestPath];
+        if (path == nil) {
+            return;
+        }
+        
+        NSError *error = nil;
+        NSString *source = [NSString stringWithContentsOfURL:path encoding:NSUTF8StringEncoding error:&error];
+        if (source == nil || error != nil) {
+            NSLog(@"Error while opening file with path: %@", path);
+            NSLog(@"%@", error);
+            return;
+        }
+        
+        NSString *content = [self quoteString: source];
+        if (content == nil) {
+            return;
+        }
+        NSString *jsCode = [NSString stringWithFormat:@"handleXHRResponse(%ld, %@)",
+                            (long)[requestId integerValue], content];
+        
+        [(WKWebView*)_engineWebView evaluateJavaScript:jsCode completionHandler:nil];
     }];
 }
 
 - (NSString *)quoteString:(NSString *)str
 {
+    if (str == nil) {
+        NSLog(@"String to quote is nil");
+        return nil;
+    }
     NSError *error = nil;
     NSData *data = [NSJSONSerialization dataWithJSONObject:@[str] options:0 error:&error];
     if (!data || error != nil) {
-        NSLog(@"String escaping failed: JSON generation");
+        NSLog(@"String escaping failed: JSON generation: %@", error);
         return nil;
     }
     NSString *jsonString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    if(!jsonString || [jsonString length] < 4) {
+    if (!jsonString || [jsonString length] < 4) {
         NSLog(@"String escaping failed: JSON result");
         return nil;
     }
-    return [jsonString substringWithRange: NSMakeRange(1, jsonString.length-2)];
+    return [jsonString substringWithRange: NSMakeRange(1, jsonString.length - 2)];
 }
 
 
