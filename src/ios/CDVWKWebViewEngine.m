@@ -367,6 +367,11 @@
     [self sendXHRResponse:reqID path:url];
 }
 
+- (NSURL *)xhrBaseURL
+{
+    return [[[(WKWebView*)_engineWebView URL] URLByStandardizingPath] URLByDeletingLastPathComponent];
+}
+
 
 - (NSURL *)securePathAppend:(NSString *)relativePath
 {
@@ -380,7 +385,7 @@
         return nil;
     }
 
-    NSURL *base = [[(WKWebView*)_engineWebView URL] URLByDeletingLastPathComponent];
+    NSURL *base = [self xhrBaseURL];
     NSURL *final = [[base URLByAppendingPathComponent:relativePath] standardizedURL];
     
     // Security sensitive
