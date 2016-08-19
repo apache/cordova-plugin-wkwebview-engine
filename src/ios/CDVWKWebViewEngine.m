@@ -289,7 +289,7 @@
 {
     NSString *scriptFile = [[NSBundle mainBundle] pathForResource:@"www/xhr" ofType:@"js"];
     if (scriptFile == nil) {
-        NSLog(@"XHR polyfill was not found!");
+        NSLog(@"CDVWKWebViewEngine: XHR polyfill was not found");
         return nil;
     }
     NSString *source = [NSString stringWithContentsOfFile:scriptFile encoding:NSUTF8StringEncoding error:nil];
@@ -343,25 +343,25 @@
 {
     NSString *str = message.body;
     if (!str || ![str isKindOfClass:[NSString class]] || [str length] < 4) {
-        NSLog(@"Invalid XHR request");
+        NSLog(@"CDVWKWebViewEngine: Invalid XHR request");
         return;
     }
     NSData *data = [message.body dataUsingEncoding:NSUTF8StringEncoding];
     NSError *error = nil;
     NSDictionary *request = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
     if (!request || error != nil) {
-        NSLog(@"JSON response could not be parsed");
+        NSLog(@"CDVWKWebViewEngine: JSON response could not be parsed");
         return;
     }
     
     NSNumber *reqID = request[@"id"];
     if(!reqID || ![reqID isKindOfClass:[NSNumber class]]) {
-        NSLog(@"XHR's ID is invalid'");
+        NSLog(@"CDVWKWebViewEngine: XHR's ID is invalid'");
         return;
     }
     NSString *url = request[@"url"];
     if(!url || ![url isKindOfClass:[NSString class]]) {
-        NSLog(@"XHR's URL is invalid'");
+        NSLog(@"CDVWKWebViewEngine: XHR's URL is invalid'");
         return;
     }
     [self sendXHRResponse:reqID path:url];
@@ -371,12 +371,12 @@
 - (NSURL *)securePathAppend:(NSString *)relativePath
 {
     if (relativePath == nil || [relativePath length] == 0) {
-        NSLog(@"requested path is empty");
+        NSLog(@"CDVWKWebViewEngine: requested path is empty");
         return nil;
     }
     
     if ([relativePath isAbsolutePath]) {
-        NSLog(@"requested path is an absolute path");
+        NSLog(@"CDVWKWebViewEngine: requested path is an absolute path");
         return nil;
     }
 
@@ -386,7 +386,7 @@
     // Security sensitive
     // Ensure URL does not leave the base URL
     if (![[final absoluteString] hasPrefix:[base absoluteString]]) {
-        NSLog(@"requested path can not be accessed: %@", final);
+        NSLog(@"CDVWKWebViewEngine: requested path can not be accessed: %@", final);
         return nil;
     }
     
@@ -398,53 +398,74 @@
 {
     [self.fileQueue addOperationWithBlock:^{
         if (requestId == nil) {
-            NSLog(@"requestID is empty");
+            NSLog(@"CDVWKWebViewEngine: requestID is empty");
             return;
         }
         
         if ([requestId integerValue] <= 0) {
-            NSLog(@"invalid requestID");
+            NSLog(@"CDVWKWebViewEngine: invalid requestID");
             return;
         }
+
+        NSLog(@"CDVWKWebViewEngine: XHR intercepted: %@", requestPath);
+
+        NSInteger requestIdInteger = [requestId integerValue];
         NSURL *path = [self securePathAppend: requestPath];
         if (path == nil) {
+            [self js_handleXHRError:requestIdInteger errorMessage:@"bad path"];
             return;
         }
         
         NSError *error = nil;
         NSString *source = [NSString stringWithContentsOfURL:path encoding:NSUTF8StringEncoding error:&error];
         if (source == nil || error != nil) {
-            NSLog(@"Error while opening file with path: %@", path);
-            NSLog(@"%@", error);
+            NSLog(@"CDVWKWebViewEngine: Error while opening file with path");
+            NSLog(@"CDVWKWebViewEngine: %@", error);
+            [self js_handleXHRError:requestIdInteger errorMessage:@"file not found"];
             return;
         }
         
         NSString *content = [self quoteString: source];
         if (content == nil) {
+            [self js_handleXHRError:requestIdInteger errorMessage:@"file content can not be serialized. BUG!"];
             return;
         }
-        NSString *jsCode = [NSString stringWithFormat:@"handleXHRResponse(%ld, %@)",
-                            (long)[requestId integerValue], content];
-        
-        [(WKWebView*)_engineWebView evaluateJavaScript:jsCode completionHandler:nil];
+
+        [self js_handleXHRResponse:requestIdInteger content:content];
     }];
+}
+
+- (void) js_handleXHRResponse:(NSInteger)requestId content:(NSString *)content
+{
+    NSString *jsCode = [NSString stringWithFormat:@"handleXHRResponse(%ld, %@)",
+                        (long)requestId, content];
+
+    [(WKWebView*)_engineWebView evaluateJavaScript:jsCode completionHandler:nil];
+}
+
+- (void) js_handleXHRError:(NSInteger)requestId errorMessage:(NSString *)message
+{
+    NSString *jsCode = [NSString stringWithFormat:@"handleXHRError(%ld, \"%@\")",
+                        (long)requestId, message];
+
+    [(WKWebView*)_engineWebView evaluateJavaScript:jsCode completionHandler:nil];
 }
 
 - (NSString *)quoteString:(NSString *)str
 {
     if (str == nil) {
-        NSLog(@"String to quote is nil");
+        NSLog(@"CDVWKWebViewEngine: String to quote is nil");
         return nil;
     }
     NSError *error = nil;
     NSData *data = [NSJSONSerialization dataWithJSONObject:@[str] options:0 error:&error];
     if (!data || error != nil) {
-        NSLog(@"String escaping failed: JSON generation: %@", error);
+        NSLog(@"CDVWKWebViewEngine: String escaping failed: JSON generation: %@", error);
         return nil;
     }
     NSString *jsonString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     if (!jsonString || [jsonString length] < 4) {
-        NSLog(@"String escaping failed: JSON result");
+        NSLog(@"CDVWKWebViewEngine: String escaping failed: JSON result");
         return nil;
     }
     return [jsonString substringWithRange: NSMakeRange(1, jsonString.length - 2)];

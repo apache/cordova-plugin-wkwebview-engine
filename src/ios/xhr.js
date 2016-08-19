@@ -16,7 +16,7 @@
   // Get original XHR implementaton
   var OriginalXHR = window.XMLHttpRequest;
   if (!OriginalXHR) {
-    console.error('XMLHttpRequest does not exist!??');
+    console.error('XHR polyfill: XMLHttpRequest does not exist!??');
     return;
   }
 
@@ -64,16 +64,16 @@
 
   XHRPrototype.open = function _wk_open(method, url, async) {
     if (!(/^[a-zA-Z0-9]+:\/\//.test(url))) {
-      console.debug("WK intercepted XHR:", url);
+      console.debug("XHR polyfill: open() intercepted XHR:", url);
+      this.__setURL(url);
       this.__set('readyState', 1); // OPENED
       this.__set('status', 0);
       this.__set('responseText', '');
-      this.__set('interceptedURL', url);
 
       this.__fireEvent('Event', 'readystatechange');
 
       if (async === false) {
-        throw new Error("wk does not support sync XHR.");
+        throw new Error("XHR polyfill: wk does not support sync XHR.");
       }
     }
     var original = this[originalReferenceKey];
@@ -84,8 +84,7 @@
     if (this.__fakeData) {
       this.__set('readyState', 3);
       this.__fireEvent('Event', 'readystatechange');
-      var url = this.__get('interceptedURL');
-      return scheduleXHRRequest(this, url);
+      return scheduleXHRRequest(this, this.__getURL());
     }
 
     var original = this[originalReferenceKey];
@@ -93,7 +92,7 @@
   };
 
   XHRPrototype.addEventListener = function _wk_addEventListener(eventName, handler) {
-    console.debug('_wk_addEventListener', eventName);
+    console.debug('XHR polyfill: _wk_addEventListener', eventName);
     if (this.__fakeListeners.hasOwnProperty(eventName)) {
       this.__fakeListeners[eventName].push(handler);
     } else {
@@ -104,7 +103,7 @@
   };
 
   XHRPrototype.removeEventListener = function _wk_removeEventListener(eventName, handler) {
-    console.debug('_wk_removeEventListener', eventName);
+    console.debug('XHR polyfill: _wk_removeEventListener', eventName);
     if (!this.__fakeListeners.hasOwnProperty(eventName)) {
       return;
     }
@@ -121,6 +120,8 @@
     var handlers = null;
     var event = document.createEvent(type);
     event.initEvent(name, false, false);
+
+    // TODO: config event.target
 
     if (this.__fakeListeners.hasOwnProperty(name)) {
       handlers = this.__fakeListeners[name];
@@ -152,6 +153,14 @@
     }
   };
 
+  XHRPrototype.__setURL = function _wk_setURL(url) {
+    this.__set('interceptedURL', url);
+  };
+
+  XHRPrototype.__getURL = function _wk_getURL() {
+    return this.__get('interceptedURL');
+  };
+
 
   var reqId = 1;
   var requests = {};
@@ -166,16 +175,27 @@
     reqId++;
   }
 
-  function handleXHRResponse(id, body) {
+  function consumeContext(id) {
     var context = requests[id];
+    if (!context) {
+      return null;
+    }
+    requests[id] = null;
+    return context;
+  }
+
+  function handleXHRResponse(id, body) {
+    var context = consumeContext(id);
     if (!context) {
       console.error("Context not found: ", id);
       return;
     }
-    requests[id] = null;
+    console.debug("XHR polyfill: Response received: ", context.__getURL());
 
     context.__set('readyState', 4);
     context.__set('status', 200);
+    context.__set('statusText', 'OK');
+    context.__set('responseType', 'text');
     context.__set('responseText', body);
     context.__set('response', body);
 
@@ -183,8 +203,26 @@
     context.__fireEvent('UIEvent', 'load');
   }
 
+  function handleXHRError(id, errorMessage) {
+    var context = consumeContext(id);
+    if (!context) {
+      console.error("Context not found: ", id);
+      return;
+    }
+    console.error("XHR polyfill:", errorMessage, context.__getURL());
+
+    context.__set('readyState', 4);
+    context.__set('status', 404);
+    context.__set('statusText', 'Not Found');
+
+    context.__fireEvent('Event', 'readystatechange');
+    context.__fireEvent('UIEvent', 'error');
+  }
+
+
   window.handleXHRResponse = handleXHRResponse;
+  window.handleXHRError = handleXHRError;
   window.XMLHttpRequest = XHRProxy;
 
-  console.debug("XHR polyfill injected!");
+  console.debug("XHR polyfill: injected!");
 })();
