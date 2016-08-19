@@ -6,9 +6,9 @@
  to you under the Apache License, Version 2.0 (the
  "License"); you may not use this file except in compliance
  with the License.  You may obtain a copy of the License at
-
+ 
  http://www.apache.org/licenses/LICENSE-2.0
-
+ 
  Unless required by applicable law or agreed to in writing,
  software distributed under the License is distributed on an
  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -49,11 +49,11 @@
         if (NSClassFromString(@"WKWebView") == nil) {
             return nil;
         }
-
+        
         self.engineWebView = [[WKWebView alloc] initWithFrame:frame];
         self.fileQueue = [[NSOperationQueue alloc] init];
     }
-
+    
     return self;
 }
 
@@ -63,12 +63,12 @@
     if (settings == nil) {
         return configuration;
     }
-
+    
     configuration.allowsInlineMediaPlayback = [settings cordovaBoolSettingForKey:@"AllowInlineMediaPlayback" defaultValue:NO];
     configuration.mediaPlaybackRequiresUserAction = [settings cordovaBoolSettingForKey:@"MediaPlaybackRequiresUserAction" defaultValue:YES];
     configuration.suppressesIncrementalRendering = [settings cordovaBoolSettingForKey:@"SuppressesIncrementalRendering" defaultValue:NO];
     configuration.mediaPlaybackAllowsAirPlay = [settings cordovaBoolSettingForKey:@"MediaPlaybackAllowsAirPlay" defaultValue:YES];
-
+    
     return configuration;
 }
 
@@ -76,9 +76,9 @@
 {
     // viewController would be available now. we attempt to set all possible delegates to it, by default
     NSDictionary* settings = self.commandDelegate.settings;
-
+    
     self.uiDelegate = [[CDVWKWebViewUIDelegate alloc] initWithTitle:[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"]];
-
+    
     WKUserContentController* userContentController = [[WKUserContentController alloc] init];
     [userContentController addScriptMessageHandler:self name:CDV_BRIDGE_NAME];
     [userContentController addScriptMessageHandler:self name:CDV_IONIC_WK];
@@ -87,28 +87,28 @@
 
     WKWebViewConfiguration* configuration = [self createConfigurationFromSettings:settings];
     configuration.userContentController = userContentController;
-
+    
     // re-create WKWebView, since we need to update configuration
     WKWebView* wkWebView = [[WKWebView alloc] initWithFrame:self.engineWebView.frame configuration:configuration];
     wkWebView.UIDelegate = self.uiDelegate;
     self.engineWebView = wkWebView;
-
+    
     if ([self.viewController conformsToProtocol:@protocol(WKUIDelegate)]) {
         wkWebView.UIDelegate = (id <WKUIDelegate>)self.viewController;
     }
-
+    
     if ([self.viewController conformsToProtocol:@protocol(WKNavigationDelegate)]) {
         wkWebView.navigationDelegate = (id <WKNavigationDelegate>)self.viewController;
     } else {
         wkWebView.navigationDelegate = (id <WKNavigationDelegate>)self;
     }
-
+    
     if ([self.viewController conformsToProtocol:@protocol(WKScriptMessageHandler)]) {
         [wkWebView.configuration.userContentController addScriptMessageHandler:(id < WKScriptMessageHandler >)self.viewController name:@"cordova"];
     }
-
+    
     [self updateSettings:settings];
-
+    
     // check if content thread has died on resume
     NSLog(@"%@", @"CDVWKWebViewEngine will reload WKWebView if required on resume");
     [[NSNotificationCenter defaultCenter]
@@ -128,13 +128,13 @@
     WKWebView* wkWebView = (WKWebView*)_engineWebView;
     NSString* title = wkWebView.title;
     BOOL reload = ((title == nil) || [title isEqualToString:@""]);
-
+    
 #ifdef DEBUG
     NSLog(@"%@", @"CDVWKWebViewEngine reloadIfRequired");
     NSLog(@"CDVWKWebViewEngine reloadIfRequired WKWebView.title: %@", title);
     NSLog(@"CDVWKWebViewEngine reloadIfRequired reload: %u", reload);
 #endif
-
+    
     if (reload) {
         NSLog(@"%@", @"CDVWKWebViewEngine reloading!");
         [wkWebView reload];
@@ -182,7 +182,7 @@
 {
     // See: https://issues.apache.org/jira/browse/CB-9636
     SEL wk_sel = NSSelectorFromString(CDV_WKWEBVIEW_FILE_URL_LOAD_SELECTOR);
-
+    
     // if it's a file URL, check whether WKWebView has the selector (which is in iOS 9 and up only)
     if (request.URL.fileURL) {
         return [_engineWebView respondsToSelector:wk_sel];
@@ -194,17 +194,17 @@
 - (void)updateSettings:(NSDictionary*)settings
 {
     WKWebView* wkWebView = (WKWebView*)_engineWebView;
-
+    
     wkWebView.configuration.preferences.minimumFontSize = [settings cordovaFloatSettingForKey:@"MinimumFontSize" defaultValue:0.0];
-
+    
     /*
      wkWebView.configuration.preferences.javaScriptEnabled = [settings cordovaBoolSettingForKey:@"JavaScriptEnabled" default:YES];
      wkWebView.configuration.preferences.javaScriptCanOpenWindowsAutomatically = [settings cordovaBoolSettingForKey:@"JavaScriptCanOpenWindowsAutomatically" default:NO];
      */
-
+    
     // By default, DisallowOverscroll is false (thus bounce is allowed)
     BOOL bounceAllowed = !([settings cordovaBoolSettingForKey:@"DisallowOverscroll" defaultValue:NO]);
-
+    
     // prevent webView from bouncing
     if (!bounceAllowed) {
         if ([wkWebView respondsToSelector:@selector(scrollView)]) {
@@ -217,15 +217,15 @@
             }
         }
     }
-
+    
     wkWebView.scrollView.scrollEnabled = [settings cordovaFloatSettingForKey:@"ScrollEnabled" defaultValue:YES];
-
+    
     NSString* decelerationSetting = [settings cordovaSettingForKey:@"WKWebViewDecelerationSpeed"];
     if (!decelerationSetting) {
         // Fallback to the UIWebView-named preference
         decelerationSetting = [settings cordovaSettingForKey:@"UIWebViewDecelerationSpeed"];
     }
-
+    
     if (![@"fast" isEqualToString:decelerationSetting]) {
         [wkWebView.scrollView setDecelerationRate:UIScrollViewDecelerationRateNormal];
     } else {
@@ -239,12 +239,12 @@
     NSDictionary* settings = [info objectForKey:kCDVWebViewEngineWebViewPreferences];
     id navigationDelegate = [info objectForKey:kCDVWebViewEngineWKNavigationDelegate];
     id uiDelegate = [info objectForKey:kCDVWebViewEngineWKUIDelegate];
-
+    
     WKWebView* wkWebView = (WKWebView*)_engineWebView;
-
+    
     if (scriptMessageHandlers && [scriptMessageHandlers isKindOfClass:[NSDictionary class]]) {
         NSArray* allKeys = [scriptMessageHandlers allKeys];
-
+        
         for (NSString* key in allKeys) {
             id object = [scriptMessageHandlers objectForKey:key];
             if ([object conformsToProtocol:@protocol(WKScriptMessageHandler)]) {
@@ -252,15 +252,15 @@
             }
         }
     }
-
+    
     if (navigationDelegate && [navigationDelegate conformsToProtocol:@protocol(WKNavigationDelegate)]) {
         wkWebView.navigationDelegate = navigationDelegate;
     }
-
+    
     if (uiDelegate && [uiDelegate conformsToProtocol:@protocol(WKUIDelegate)]) {
         wkWebView.UIDelegate = uiDelegate;
     }
-
+    
     if (settings && [settings isKindOfClass:[NSDictionary class]]) {
         [self updateSettings:settings];
     }
@@ -307,11 +307,11 @@
 - (void)handleCordovaMessage:(WKScriptMessage*)message
 {
     CDVViewController* vc = (CDVViewController*)self.viewController;
-
+    
     NSArray* jsonEntry = message.body; // NSString:callbackId, NSString:service, NSString:action, NSArray:args
     CDVInvokedUrlCommand* command = [CDVInvokedUrlCommand commandFromJson:jsonEntry];
     CDV_EXEC_LOG(@"Exec(%@): Calling %@.%@", command.callbackId, command.className, command.methodName);
-
+    
     if (![vc.commandQueue execute:command]) {
 #ifdef DEBUG
         NSError* error = nil;
@@ -319,16 +319,16 @@
         NSData* jsonData = [NSJSONSerialization dataWithJSONObject:jsonEntry
                                                            options:0
                                                              error:&error];
-
+        
         if (error == nil) {
             commandJson = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
         }
-
+        
         static NSUInteger maxLogLength = 1024;
         NSString* commandString = ([commandJson length] > maxLogLength) ?
         [NSString stringWithFormat : @"%@[...]", [commandJson substringToIndex:maxLogLength]] :
         commandJson;
-
+        
         NSLog(@"FAILED pluginJSON = %@", commandString);
 #endif
     }
@@ -402,7 +402,7 @@
 {
     CDVViewController* vc = (CDVViewController*)self.viewController;
     [CDVUserAgentUtil releaseLock:vc.userAgentLockToken];
-
+    
     [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:CDVPageDidLoadNotification object:webView]];
 }
 
@@ -410,10 +410,10 @@
 {
     CDVViewController* vc = (CDVViewController*)self.viewController;
     [CDVUserAgentUtil releaseLock:vc.userAgentLockToken];
-
+    
     NSString* message = [NSString stringWithFormat:@"Failed to load webpage with error: %@", [error localizedDescription]];
     NSLog(@"%@", message);
-
+    
     NSURL* errorUrl = vc.errorURL;
     if (errorUrl) {
         errorUrl = [NSURL URLWithString:[NSString stringWithFormat:@"?error=%@", [message stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]] relativeToURL:errorUrl];
@@ -433,7 +433,7 @@
     if ([url isFileURL]) {
         return YES;
     }
-
+    
     return NO;
 }
 
@@ -441,13 +441,13 @@
 {
     NSURL* url = [navigationAction.request URL];
     CDVViewController* vc = (CDVViewController*)self.viewController;
-
+    
     /*
      * Give plugins the chance to handle the url
      */
     BOOL anyPluginsResponded = NO;
     BOOL shouldAllowRequest = NO;
-
+    
     for (NSString* pluginName in vc.pluginObjects) {
         CDVPlugin* plugin = [vc.pluginObjects objectForKey:pluginName];
         SEL selector = NSSelectorFromString(@"shouldOverrideLoadWithRequest:navigationType:");
@@ -459,11 +459,11 @@
             }
         }
     }
-
+    
     if (anyPluginsResponded) {
         return decisionHandler(shouldAllowRequest);
     }
-
+    
     /*
      * Handle all other types of urls (tel:, sms:), and requests to load a url in the main webview.
      */
@@ -473,7 +473,7 @@
     } else {
         [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:CDVPluginHandleOpenURLNotification object:url]];
     }
-
+    
     return decisionHandler(NO);
 }
 @end
