@@ -82,9 +82,14 @@
     WKUserContentController* userContentController = [[WKUserContentController alloc] init];
     [userContentController addScriptMessageHandler:self name:CDV_BRIDGE_NAME];
     [userContentController addScriptMessageHandler:self name:CDV_IONIC_WK];
-    [userContentController addUserScript:[self xhrPolyfillScript]];
-
-
+    
+    // Inject XHR Polyfill
+    BOOL disableXHRPolyfill = [settings cordovaBoolSettingForKey:@"DisableXHRPolyfill" defaultValue:NO];
+    if (!disableXHRPolyfill) {
+        [userContentController addUserScript:[self xhrPolyfillScript]];
+    }
+    
+    
     WKWebViewConfiguration* configuration = [self createConfigurationFromSettings:settings];
     configuration.userContentController = userContentController;
     
