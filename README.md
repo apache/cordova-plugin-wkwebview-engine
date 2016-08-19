@@ -23,7 +23,7 @@ Cordova WKWebView Engine
 This plugin is an extension of the [Apache Cordova WKWebView plugin](https://github.com/apache/cordova-plugin-wkwebview-engine). It includes enhancements to resolve some of the issues surrounding XHR requests, along with some DOM exception issues. Ionic is working with the Cordova team
 to fully test these changes with the eventual goal of merging the updates into the official Cordova plugin. After the beta testing period, our hope is to make the WKWebView plugin an Ionic default so all users can easily take advantage of this plugin's improved performance over UIWebView.
 
-This plugin only supports iOS 9 and above.
+This plugin only supports iOS 9 and above and will fall back to UIWebView on iOS 8.
 
 The WKWebView plugin is only used by iOS, so ensure the `cordova-ios` platform is installed. Additionly, the `cordova-ios` platform version must be `4.0` or greater.
 
