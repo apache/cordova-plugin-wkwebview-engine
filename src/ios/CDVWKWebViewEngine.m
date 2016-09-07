@@ -98,7 +98,7 @@
     }
 
     if ([self.viewController conformsToProtocol:@protocol(WKScriptMessageHandler)]) {
-        [wkWebView.configuration.userContentController addScriptMessageHandler:(id < WKScriptMessageHandler >)self.viewController name:@"cordova"];
+        [wkWebView.configuration.userContentController addScriptMessageHandler:(id < WKScriptMessageHandler >)self.viewController name:CDV_BRIDGE_NAME];
     }
 
     [self updateSettings:settings];
