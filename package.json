@@ -3,9 +3,6 @@
   "version": "1.0.4-dev",
   "description": "The official Apache Cordova WKWebView Engine Plugin",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "https://git-wip-us.apache.org/repos/asf/cordova-plugin-wkwebview-engine.git"
@@ -15,8 +12,10 @@
     "wkwebview"
   ],
   "scripts": {
-    "test": "npm run jshint",
-    "jshint": "node node_modules/jshint/bin/jshint src"
+    "test": "npm run jshint && npm run objc-tests",
+    "objc-tests": "cd tests/ios && npm test",
+        "preobjc-tests": "cd tests/ios && npm install",
+    "jshint": "node_modules/.bin/jshint src"
   },
   "author": "Apache Cordova",
   "license": "Apache-2.0",
