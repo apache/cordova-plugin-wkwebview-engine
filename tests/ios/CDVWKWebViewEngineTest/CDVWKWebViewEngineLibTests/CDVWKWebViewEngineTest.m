@@ -204,7 +204,8 @@
     XCTAssertFalse([self.plugin shouldReloadWebView]);
     
     // document with empty title should *not* reload
-    [wkWebView loadHTMLString:empty_title_document baseURL:nil];
+    // baseURL:nil results in about:blank, so we use a dummy here
+    [wkWebView loadHTMLString:empty_title_document baseURL:[NSURL URLWithString:@"about:"]];
     XCTAssertFalse([self.plugin shouldReloadWebView]);
 
     // Anecdotal assertion that when the WKWebView process has died,
