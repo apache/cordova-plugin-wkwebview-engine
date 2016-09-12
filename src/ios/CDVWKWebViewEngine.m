@@ -403,6 +403,11 @@
         NSLog(@"CDVWKWebViewEngine: requested path is an absolute path");
         return nil;
     }
+    // Remove # and ?
+    NSRange range = [relativePath rangeOfCharacterFromSet:[NSCharacterSet characterSetWithCharactersInString:@"#?"]];
+    if(range.location != NSNotFound) {
+        relativePath = [relativePath substringToIndex:range.location];
+    }
 
     NSURL *base = [self xhrBaseURL];
     NSURL *final = [[base URLByAppendingPathComponent:relativePath] standardizedURL];
