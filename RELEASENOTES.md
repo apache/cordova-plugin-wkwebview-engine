@@ -21,8 +21,24 @@
 
 # Release Notes
 
+### 1.1.0 (Sep 08, 2016)
+* [CB-11824](https://issues.apache.org/jira/browse/CB-11824) - Update tests to include objective-c tests
+* [CB-11554](https://issues.apache.org/jira/browse/CB-11554) - fixed unit tests
+* [CB-11815](https://issues.apache.org/jira/browse/CB-11815) (**iOS**) Fix hard-coded bridge name "cordova"
+* [CB-11554](https://issues.apache.org/jira/browse/CB-11554) - too 'brutal' app reload when title is empty
+* [CB-11074](https://issues.apache.org/jira/browse/CB-11074) - Ensure settings from `config.xml` are taken into consideration
+* Add ability to set the deceleration rate for the scrollview to 'fast'
+* [CB-11496](https://issues.apache.org/jira/browse/CB-11496) - Add obj-c unit tests for `WKWebViewConfiguration`, `WKPreference`
+* [CB-11496](https://issues.apache.org/jira/browse/CB-11496) - Create Obj-C unit-tests for `wkwebview-engine` (fix linker error)
+* [CB-11452](https://issues.apache.org/jira/browse/CB-11452) - Update README.md with latest news about `AllowInlineMediaPlayback` fix
+* [CB-9888](https://issues.apache.org/jira/browse/CB-9888) (**iOS**) check & reload `WKWebView`
+* [CB-11375](https://issues.apache.org/jira/browse/CB-11375) - `onReset` method of `CDVPlugin` is never called
+* Add pull request template.
+* [CB-10818](https://issues.apache.org/jira/browse/CB-10818) - Support the scroll deceleration speed preference.
+* [CB-10817](https://issues.apache.org/jira/browse/CB-10817) - Will now reload the `webView` if a crash occurs
+
 ### 1.0.3 (Apr 15, 2016)
-* CB-10636 Add `JSHint` for plugins
+* [CB-10636](https://issues.apache.org/jira/browse/CB-10636) Add `JSHint` for plugins
 
 ### 1.0.2 (Feb 09, 2016)
 * [CB-10269](https://issues.apache.org/jira/browse/CB-10269) - Replace cordova exec only when present in wkwebview
@@ -31,22 +47,22 @@
 
 ### 1.0.1 (Dec 11, 2015)
 
-* CB-10190 - WKWebView engine is not releasing the user-agent lock
+* [CB-10190](https://issues.apache.org/jira/browse/CB-10190) - WKWebView engine is not releasing the user-agent lock
 
 ### 1.0.0 (Dec 04, 2015)
 
-* CB-10146 - Add to README WKWebViewEngine quirks that will affect migration from UIWebView
-* CB-10133 - DataClone DOM Exception 25 thrown for postMessage
-* CB-10106 - added bridge proxy
-* CB-10107 - nativeEvalAndFetch called for all bridges
-* CB-10106 - iOS bridges need to take into account bridge changes
-* CB-10073 - WKWebViewEngine should post CDVPluginResetNotification
-* CB-10035 Updated RELEASENOTES to be newest to oldest
-* CB-10002 - WKWebView should propagate shouldOverrideLoadWithRequest to plugins
-* CB-9979 CB-9972 Change ATS link to new link
-* CB-9636 - Plugin should detect at runtime iOS 8 and use of file:// url and present an error
-* CB-8839 - WKWebView ignores DisallowOverscroll preference
-* CB-8556 - fix handleOpenURL for WKWebViewEngine plugin
-* CB-8666 - Update CDVWKWebViewEngine plugin to use 4.0.x branch code
+* [CB-10146](https://issues.apache.org/jira/browse/CB-10146) - Add to README WKWebViewEngine quirks that will affect migration from UIWebView
+* [CB-10133](https://issues.apache.org/jira/browse/CB-10133) - DataClone DOM Exception 25 thrown for postMessage
+* [CB-10106](https://issues.apache.org/jira/browse/CB-10106) - added bridge proxy
+* [CB-10107](https://issues.apache.org/jira/browse/CB-10107) - nativeEvalAndFetch called for all bridges
+* [CB-10106](https://issues.apache.org/jira/browse/CB-10106) - iOS bridges need to take into account bridge changes
+* [CB-10073](https://issues.apache.org/jira/browse/CB-10073) - WKWebViewEngine should post CDVPluginResetNotification
+* [CB-10035](https://issues.apache.org/jira/browse/CB-10035) Updated RELEASENOTES to be newest to oldest
+* [CB-10002](https://issues.apache.org/jira/browse/CB-10002) - WKWebView should propagate shouldOverrideLoadWithRequest to plugins
+* [CB-9979](https://issues.apache.org/jira/browse/CB-9979) [CB-9972](https://issues.apache.org/jira/browse/CB-9972) Change ATS link to new link
+* [CB-9636](https://issues.apache.org/jira/browse/CB-9636) - Plugin should detect at runtime iOS 8 and use of file:// url and present an error
+* [CB-8839](https://issues.apache.org/jira/browse/CB-8839) - WKWebView ignores DisallowOverscroll preference
+* [CB-8556](https://issues.apache.org/jira/browse/CB-8556) - fix handleOpenURL for WKWebViewEngine plugin
+* [CB-8666](https://issues.apache.org/jira/browse/CB-8666) - Update CDVWKWebViewEngine plugin to use 4.0.x branch code
 
 

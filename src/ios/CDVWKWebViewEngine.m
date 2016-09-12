@@ -115,7 +115,7 @@
     }
 
     if ([self.viewController conformsToProtocol:@protocol(WKScriptMessageHandler)]) {
-        [wkWebView.configuration.userContentController addScriptMessageHandler:(id < WKScriptMessageHandler >)self.viewController name:@"cordova"];
+        [wkWebView.configuration.userContentController addScriptMessageHandler:(id < WKScriptMessageHandler >)self.viewController name:CDV_BRIDGE_NAME];
     }
 
     [self updateSettings:settings];
@@ -131,27 +131,35 @@
 }
 
 - (void) onAppWillEnterForeground:(NSNotification*)notification {
-    [self reloadIfRequired];
+    if ([self shouldReloadWebView]) {
+        NSLog(@"%@", @"CDVWKWebViewEngine reloading!");
+        [(WKWebView*)_engineWebView reload];
+    }
 }
 
-- (BOOL)reloadIfRequired
+- (BOOL)shouldReloadWebView
 {
     WKWebView* wkWebView = (WKWebView*)_engineWebView;
-    NSString* title = wkWebView.title;
-    BOOL reload = ((title == nil) || [title isEqualToString:@""]);
+    return [self shouldReloadWebView:wkWebView.URL title:wkWebView.title];
+}
 
+- (BOOL)shouldReloadWebView:(NSURL*)location title:(NSString*)title
+{
+    BOOL title_is_nil = (title == nil);
+    BOOL location_is_blank = [[location absoluteString] isEqualToString:@"about:blank"];
+    
+    BOOL reload = (title_is_nil || location_is_blank);
+    
 #ifdef DEBUG
-    NSLog(@"%@", @"CDVWKWebViewEngine reloadIfRequired");
-    NSLog(@"CDVWKWebViewEngine reloadIfRequired WKWebView.title: %@", title);
-    NSLog(@"CDVWKWebViewEngine reloadIfRequired reload: %u", reload);
+    NSLog(@"%@", @"CDVWKWebViewEngine shouldReloadWebView::");
+    NSLog(@"CDVWKWebViewEngine shouldReloadWebView title: %@", title);
+    NSLog(@"CDVWKWebViewEngine shouldReloadWebView location: %@", [location absoluteString]);
+    NSLog(@"CDVWKWebViewEngine shouldReloadWebView reload: %u", reload);
 #endif
-
-    if (reload) {
-        NSLog(@"%@", @"CDVWKWebViewEngine reloading!");
-        [wkWebView reload];
-    }
+    
     return reload;
 }
+
 
 - (id)loadRequest:(NSURLRequest*)request
 {

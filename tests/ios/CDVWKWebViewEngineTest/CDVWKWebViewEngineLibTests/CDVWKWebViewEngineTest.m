@@ -33,6 +33,8 @@
 @interface CDVWKWebViewEngine ()
 
 // TODO: expose private interface, if needed
+- (BOOL)shouldReloadWebView;
+- (BOOL)shouldReloadWebView:(NSURL*)location title:(NSString*)title;
 
 @end
 
@@ -184,6 +186,38 @@
     }
     
     XCTAssertTrue(wkWebView.scrollView.decelerationRate == UIScrollViewDecelerationRateFast);
+}
+
+- (void) testShouldReloadWebView {
+    WKWebView* wkWebView = (WKWebView*)self.plugin.engineWebView;
+    
+    NSURL* about_blank = [NSURL URLWithString:@"about:blank"];
+    NSURL* real_site = [NSURL URLWithString:@"https://cordova.apache.org"];
+    NSString* empty_title_document = @"<html><head><title></title></head></html>";
+    
+    // about:blank should reload
+    [wkWebView loadRequest:[NSURLRequest requestWithURL:about_blank]];
+    XCTAssertTrue([self.plugin shouldReloadWebView]);
+
+    // a network location should *not* reload
+    [wkWebView loadRequest:[NSURLRequest requestWithURL:real_site]];
+    XCTAssertFalse([self.plugin shouldReloadWebView]);
+    
+    // document with empty title should *not* reload
+    // baseURL:nil results in about:blank, so we use a dummy here
+    [wkWebView loadHTMLString:empty_title_document baseURL:[NSURL URLWithString:@"about:"]];
+    XCTAssertFalse([self.plugin shouldReloadWebView]);
+
+    // Anecdotal assertion that when the WKWebView process has died,
+    // the title is nil, should always reload
+    XCTAssertTrue([self.plugin shouldReloadWebView:about_blank title:nil]);
+    XCTAssertTrue([self.plugin shouldReloadWebView:real_site title:nil]);
+    
+    // about:blank should always reload
+    XCTAssertTrue([self.plugin shouldReloadWebView:about_blank title:@"some title"]);
+    
+    // non about:blank with a non-nil title should **not** reload
+    XCTAssertFalse([self.plugin shouldReloadWebView:real_site title:@""]);
 }
 
 - (void) testConfigurationWithMediaPlaybackAllowsAirPlay {
