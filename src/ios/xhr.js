@@ -192,7 +192,6 @@
     }
     console.debug("XHR polyfill: Response received: ", context.__getURL());
 
-    debugger;
     switch (context.responseText) {
       case 'arraybuffer':
         context.__set('response', decodeBase64(base64));
