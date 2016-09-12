@@ -446,7 +446,7 @@
         }
 
         NSError *error = nil;
-        NSString *source = [NSString stringWithContentsOfURL:path encoding:NSUTF8StringEncoding error:&error];
+        NSData *source = [NSData dataWithContentsOfURL:path options:0 error:&error];
         if (source == nil || error != nil) {
             NSLog(@"CDVWKWebViewEngine: Error while opening file with path");
             NSLog(@"CDVWKWebViewEngine: %@", error);
@@ -454,7 +454,7 @@
             return;
         }
 
-        NSString *content = [self quoteString: source];
+        NSString *content = [source base64EncodedStringWithOptions:0];
         if (content == nil) {
             [self js_handleXHRError:requestIdInteger errorMessage:@"file content can not be serialized. BUG!"];
             return;
@@ -464,10 +464,10 @@
     }];
 }
 
-- (void) js_handleXHRResponse:(NSInteger)requestId content:(NSString *)content
+- (void) js_handleXHRResponse:(NSInteger)requestId content:(NSString *)base64
 {
-    NSString *jsCode = [NSString stringWithFormat:@"handleXHRResponse(%ld, %@)",
-                        (long)requestId, content];
+    NSString *jsCode = [NSString stringWithFormat:@"handleXHRResponse(%ld, \"%@\")",
+                        (long)requestId, base64];
 
     [(WKWebView*)_engineWebView evaluateJavaScript:jsCode completionHandler:nil];
 }
@@ -478,26 +478,6 @@
                         (long)requestId, message];
 
     [(WKWebView*)_engineWebView evaluateJavaScript:jsCode completionHandler:nil];
-}
-
-- (NSString *)quoteString:(NSString *)str
-{
-    if (str == nil) {
-        NSLog(@"CDVWKWebViewEngine: String to quote is nil");
-        return nil;
-    }
-    NSError *error = nil;
-    NSData *data = [NSJSONSerialization dataWithJSONObject:@[str] options:0 error:&error];
-    if (!data || error != nil) {
-        NSLog(@"CDVWKWebViewEngine: String escaping failed: JSON generation: %@", error);
-        return nil;
-    }
-    NSString *jsonString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    if (!jsonString || [jsonString length] < 4) {
-        NSLog(@"CDVWKWebViewEngine: String escaping failed: JSON result");
-        return nil;
-    }
-    return [jsonString substringWithRange: NSMakeRange(1, jsonString.length - 2)];
 }
 
 

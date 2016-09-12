@@ -184,7 +184,7 @@
     return context;
   }
 
-  function handleXHRResponse(id, body) {
+  function handleXHRResponse(id, base64) {
     var context = consumeContext(id);
     if (!context) {
       console.error("Context not found: ", id);
@@ -192,12 +192,24 @@
     }
     console.debug("XHR polyfill: Response received: ", context.__getURL());
 
+    debugger;
+    switch (context.responseText) {
+      case 'arraybuffer':
+        context.__set('response', decodeBase64(base64));
+        break;
+      default:
+        console.error('Unknown responseText:', context.responseText);
+      case 'text':
+      case '':
+        var response = atob(base64);
+        context.__set('responseText', response);
+        context.__set('response', response);
+        break;
+    }
+
     context.__set('readyState', 4);
     context.__set('status', 200);
     context.__set('statusText', 'OK');
-    context.__set('responseType', 'text');
-    context.__set('responseText', body);
-    context.__set('response', body);
 
     context.__fireEvent('Event', 'readystatechange');
     context.__fireEvent('UIEvent', 'load');
@@ -219,10 +231,56 @@
     context.__fireEvent('UIEvent', 'error');
   }
 
-
   window.handleXHRResponse = handleXHRResponse;
   window.handleXHRError = handleXHRError;
   window.XMLHttpRequest = XHRProxy;
 
   console.debug("XHR polyfill: injected!");
+
+
+
+  /*
+  * base64-arraybuffer
+  * https://github.com/niklasvh/base64-arraybuffer
+  *
+  * Copyright (c) 2012 Niklas von Hertzen
+  * Licensed under the MIT license.
+  */
+  var base64key = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+  // Use a lookup table to find the index.
+  var lookup = new Uint8Array(256);
+  for (var i = 0; i < base64key.length; i++) {
+    lookup[base64key.charCodeAt(i)] = i;
+  }
+
+  function decodeBase64(base64) {
+    var bufferLength = base64.length * 0.75,
+    len = base64.length, i, p = 0,
+    encoded1, encoded2, encoded3, encoded4;
+
+    if (base64[base64.length - 1] === "=") {
+      bufferLength--;
+      if (base64[base64.length - 2] === "=") {
+        bufferLength--;
+      }
+    }
+
+    var arraybuffer = new ArrayBuffer(bufferLength),
+    bytes = new Uint8Array(arraybuffer);
+
+    for (i = 0; i < len; i+=4) {
+      encoded1 = lookup[base64.charCodeAt(i)];
+      encoded2 = lookup[base64.charCodeAt(i+1)];
+      encoded3 = lookup[base64.charCodeAt(i+2)];
+      encoded4 = lookup[base64.charCodeAt(i+3)];
+
+      bytes[p++] = (encoded1 << 2) | (encoded2 >> 4);
+      bytes[p++] = ((encoded2 & 15) << 4) | (encoded3 >> 2);
+      bytes[p++] = ((encoded3 & 3) << 6) | (encoded4 & 63);
+    }
+
+    return arraybuffer;
+  }
+
 })();
