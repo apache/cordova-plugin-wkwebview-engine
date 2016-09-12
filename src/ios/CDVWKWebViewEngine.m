@@ -314,7 +314,7 @@
     }
     return [[WKUserScript alloc] initWithSource:source
                                   injectionTime:WKUserScriptInjectionTimeAtDocumentStart
-                               forMainFrameOnly:NO];
+                               forMainFrameOnly:YES];
 }
 
 #pragma mark WKScriptMessageHandler implementation
