@@ -362,7 +362,7 @@
     return NO;
 }
 
-- (void) webView: (WKWebView *) webView decidePolicyForNavigationAction: (WKNavigationAction*) navigationAction decisionHandler: (void (^)(WKNavigationActionPolicy)) decisionHandler
+- (void) webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction*)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
 {
     NSURL* url = [navigationAction.request URL];
     CDVViewController* vc = (CDVViewController*)self.viewController;
@@ -385,20 +385,27 @@
         }
     }
 
-    if (anyPluginsResponded) {
-        return decisionHandler(shouldAllowRequest);
+    if (!anyPluginsResponded) {
+        /*
+         * Handle all other types of urls (tel:, sms:), and requests to load a url in the main webview.
+         */
+        shouldAllowRequest = [self defaultResourcePolicyForURL:url];
+        if (!shouldAllowRequest) {
+            [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:CDVPluginHandleOpenURLNotification object:url]];
+        }
     }
 
-    /*
-     * Handle all other types of urls (tel:, sms:), and requests to load a url in the main webview.
-     */
-    BOOL shouldAllowNavigation = [self defaultResourcePolicyForURL:url];
-    if (shouldAllowNavigation) {
-        return decisionHandler(YES);
+
+    if (shouldAllowRequest) {
+        NSString *scheme = url.scheme;
+        if ([scheme isEqualToString:@"tel"] || [scheme isEqualToString:@"mailto"]) {
+            [[UIApplication sharedApplication] openURL:url];
+            decisionHandler(WKNavigationActionPolicyCancel);
+        } else {
+            decisionHandler(WKNavigationActionPolicyAllow);
+        }
     } else {
-        [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:CDVPluginHandleOpenURLNotification object:url]];
+        decisionHandler(WKNavigationActionPolicyCancel);
     }
-
-    return decisionHandler(NO);
 }
 @end
