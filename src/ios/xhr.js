@@ -191,16 +191,16 @@
       return;
     }
     console.debug("XHR polyfill: Response received: ", context.__getURL());
-
+    var buffer = decodeBase64(base64);
     switch (context.responseText) {
       case 'arraybuffer':
-        context.__set('response', decodeBase64(base64));
+        context.__set('response', buffer);
         break;
       default:
         console.error('Unknown responseText:', context.responseText);
       case 'text':
       case '':
-        var response = atob(base64);
+        var response = utf8Decode(buffer);
         context.__set('responseText', response);
         context.__set('response', response);
         break;
@@ -280,6 +280,31 @@
     }
 
     return arraybuffer;
+  }
+
+  function utf8Decode(buf) {
+    var bytes = new Uint8Array(buf);
+    var res = '';
+    var tmp = '';
+    var end = bytes.byteLength;
+    for (var i = 0; i < end; i++) {
+      if (bytes[i] <= 0x7F) {
+        res += decodeUtf8Char(tmp) + String.fromCharCode(bytes[i]);
+        tmp = '';
+      } else {
+        tmp += '%' + bytes[i].toString(16);
+      }
+    }
+
+    return res + decodeUtf8Char(tmp);
+  }
+
+  function decodeUtf8Char (str) {
+    try {
+      return decodeURIComponent(str);
+    } catch (err) {
+      return String.fromCharCode(0xFFFD); // UTF 8 invalid char
+    }
   }
 
 })();
