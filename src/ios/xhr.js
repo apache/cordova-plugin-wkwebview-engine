@@ -52,10 +52,10 @@
       });
     }
   }
-  for (property in xhrInstance) {
+  for (var property in xhrInstance) {
     configProperty(property);
   }
-  for (property in OriginalXHR) {
+  for (var property in OriginalXHR) {
     if (property !== 'prototype' && OriginalXHR.hasOwnProperty(property)) {
       XHRProxy[property] = OriginalXHR[property];
     }
