@@ -8,6 +8,6 @@
         "cordova-ios": "*"
     },
     "scripts": {
-        "test": "xcodebuild test -workspace CDVWKWebViewEngineTest.xcworkspace -scheme CDVWKWebViewEngineLibTests -destination \"platform=iOS Simulator,name=iPhone 5\""
+        "test": "xcodebuild test -workspace CDVWKWebViewEngineTest.xcworkspace -scheme CDVWKWebViewEngineLibTests -destination 'platform=iOS Simulator,name=iPhone 5' -xcconfig test.xcconfig"
     }
 }
