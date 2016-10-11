@@ -123,6 +123,32 @@
                name:UIApplicationWillEnterForegroundNotification object:nil];
 
     NSLog(@"Using WKWebView");
+
+    [self addURLObserver];
+}
+
+- (void)onReset {
+    [self addURLObserver];
+}
+
+static void * KVOContext = &KVOContext;
+
+- (void)addURLObserver {
+    if(![[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){.majorVersion = 9, .minorVersion = 0, .patchVersion = 0 }]){
+        [self.webView addObserver:self forKeyPath:@"URL" options:0 context:KVOContext];
+    }
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context
+{
+    if (context == KVOContext) {
+        if (object == [self webView] && [keyPath isEqualToString: @"URL"] && [object valueForKeyPath:keyPath] == nil){
+            NSLog(@"URL is nil. Reloading WebView");
+            [(WKWebView*)_engineWebView reload];
+        }
+    } else {
+        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+    }
 }
 
 - (void) onAppWillEnterForeground:(NSNotification*)notification {
