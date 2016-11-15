@@ -4,6 +4,19 @@
     return;
   }
 
+  var stopScrollFunc = null;
+  window.IonicStopScroll = {
+    stop: function(callback) {
+        stopScrollFunc = callback;
+        window.webkit.messageHandlers.stopScroll.postMessage('');
+    },
+    fire: function() {
+        stopScrollFunc && stopScrollFunc();
+        stopScrollFunc = null;
+    }
+  };
+  console.debug("Ionic Stop Scroll injected!");
+
   var originalReferenceKey = '__wk_original';
   var xhrMessager = window.webkit.messageHandlers.xhr;
   var loc = window.location.protocol;

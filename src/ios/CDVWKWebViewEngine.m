@@ -25,6 +25,7 @@
 
 #define CDV_BRIDGE_NAME @"cordova"
 #define CDV_IONIC_WK @"xhr"
+#define CDV_IONIC_STOP_SCROLL @"stopScroll"
 #define CDV_WKWEBVIEW_FILE_URL_LOAD_SELECTOR @"loadFileURL:allowingReadAccessToURL:"
 
 @interface CDVWKWebViewEngine ()
@@ -82,6 +83,7 @@
     WKUserContentController* userContentController = [[WKUserContentController alloc] init];
     [userContentController addScriptMessageHandler:self name:CDV_BRIDGE_NAME];
     [userContentController addScriptMessageHandler:self name:CDV_IONIC_WK];
+    [userContentController addScriptMessageHandler:self name:CDV_IONIC_STOP_SCROLL];
 
     // Inject XHR Polyfill
     BOOL disableXHRPolyfill = [settings cordovaBoolSettingForKey:@"DisableXHRPolyfill" defaultValue:NO];
@@ -147,16 +149,16 @@
 {
     BOOL title_is_nil = (title == nil);
     BOOL location_is_blank = [[location absoluteString] isEqualToString:@"about:blank"];
-    
+
     BOOL reload = (title_is_nil || location_is_blank);
-    
+
 #ifdef DEBUG
     NSLog(@"%@", @"CDVWKWebViewEngine shouldReloadWebView::");
     NSLog(@"CDVWKWebViewEngine shouldReloadWebView title: %@", title);
     NSLog(@"CDVWKWebViewEngine shouldReloadWebView location: %@", [location absoluteString]);
     NSLog(@"CDVWKWebViewEngine shouldReloadWebView reload: %u", reload);
 #endif
-    
+
     return reload;
 }
 
@@ -325,6 +327,8 @@
         [self handleCordovaMessage: message];
     } else if ([message.name isEqualToString:CDV_IONIC_WK]) {
         [self handleXHRMessage: message];
+    } else if ([message.name isEqualToString:CDV_IONIC_STOP_SCROLL]) {
+        [self handleStopScroll];
     }
 }
 
@@ -384,6 +388,31 @@
         return;
     }
     [self sendXHRResponse:reqID path:url];
+}
+
+- (void)handleStopScroll
+{
+    WKWebView* wkWebView = (WKWebView*)_engineWebView;
+    NSLog(@"CDVWKWebViewEngine: handleStopScroll");
+    [self recursiveStopScroll:[wkWebView scrollView]];
+    [wkWebView evaluateJavaScript:@"window.IonicStopScroll.fire()" completionHandler:nil];
+}
+
+- (void)recursiveStopScroll:(UIView *)node
+{
+    if([node isKindOfClass: [UIScrollView class]]) {
+        UIScrollView *nodeAsScroll = (UIScrollView *)node;
+
+        if([nodeAsScroll isScrollEnabled] && ![nodeAsScroll isHidden]) {
+            [nodeAsScroll setScrollEnabled: NO];
+            [nodeAsScroll setScrollEnabled: YES];
+        }
+    }
+
+    // iterate tree recursivelly
+    for (UIView *child in [node subviews]) {
+        [self recursiveStopScroll:child];
+    }
 }
 
 - (NSURL *)xhrBaseURL
