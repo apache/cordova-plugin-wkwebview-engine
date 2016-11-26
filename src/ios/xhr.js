@@ -6,13 +6,18 @@
 
   var stopScrollFunc = null;
   window.IonicStopScroll = {
-    stop: function(callback) {
+    stop: function stop(callback) {
+      if (!stopScrollFunc) {
         stopScrollFunc = callback;
         window.webkit.messageHandlers.stopScroll.postMessage('');
+      }
     },
-    fire: function() {
-        stopScrollFunc && stopScrollFunc();
-        stopScrollFunc = null;
+    fire: function fire() {
+      stopScrollFunc && stopScrollFunc();
+      stopScrollFunc = null;
+    },
+    cancel: function cancel() {
+      stopScrollFunc = null;
     }
   };
   console.debug("Ionic Stop Scroll injected!");
