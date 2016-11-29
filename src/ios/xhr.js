@@ -41,7 +41,6 @@
   // Constructs the XHR proxy
   var XHRProxy = function () {
     this.__fakeData = null;
-    this.__fakeListeners = {};
     this[originalReferenceKey] = new OriginalXHR();
   };
   var XHRPrototype = XHRProxy.prototype;
@@ -109,52 +108,16 @@
     return original.send.apply(original, arguments);
   };
 
-  XHRPrototype.addEventListener = function _wk_addEventListener(eventName, handler) {
-    console.debug('XHR polyfill: _wk_addEventListener', eventName);
-    if (this.__fakeListeners.hasOwnProperty(eventName)) {
-      this.__fakeListeners[eventName].push(handler);
-    } else {
-      this.__fakeListeners[eventName] = [handler];
-    }
-    var original = this[originalReferenceKey];
-    return original.addEventListener.apply(original, arguments);
-  };
-
-  XHRPrototype.removeEventListener = function _wk_removeEventListener(eventName, handler) {
-    console.debug('XHR polyfill: _wk_removeEventListener', eventName);
-    if (!this.__fakeListeners.hasOwnProperty(eventName)) {
-      return;
-    }
-
-    var index = this.__fakeListeners[eventName].indexOf(handler);
-    if (index !== -1) {
-      this.__fakeListeners[eventName].splice(index, 1);
-    }
-    var original = this[originalReferenceKey];
-    return original.removeEventListener.apply(original, arguments);
-  };
-
   XHRPrototype.__fireEvent = function _wk_fireEvent(type, name) {
     var handlers = null;
     var event = document.createEvent(type);
     event.initEvent(name, false, false);
 
     // TODO: config event.target
-
-    if (this.__fakeListeners.hasOwnProperty(name)) {
-      handlers = this.__fakeListeners[name];
-      for (var i = 0; i < handlers.length; i++) {
-        try {
-          handlers[i](event);
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    }
-
-    var handler = this['on' + name];
-    if (handler && (!handlers || handlers.indexOf(handler) === -1)) {
-      handler(event);
+    try {
+      this.dispatchEvent(event);
+    } catch (e) {
+      console.error('dispatchEvent() is not allowed?', e);
     }
   };
 
