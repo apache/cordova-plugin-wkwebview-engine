@@ -99,7 +99,7 @@
     wkWebView.UIDelegate = self.uiDelegate;
     self.engineWebView = wkWebView;
 
-    if ([self.viewController isKindOfClass:[CDVViewController class]]) {
+    if (IsAtLeastiOSVersion(@"9.0") && [self.viewController isKindOfClass:[CDVViewController class]]) {
         wkWebView.customUserAgent = ((CDVViewController*) self.viewController).userAgent;
     }
 
