@@ -134,7 +134,7 @@
 static void * KVOContext = &KVOContext;
 
 - (void)addURLObserver {
-    if(![[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){.majorVersion = 9, .minorVersion = 0, .patchVersion = 0 }]){
+    if(!IsAtLeastiOSVersion(@"9.0")){
         [self.webView addObserver:self forKeyPath:@"URL" options:0 context:KVOContext];
     }
 }
@@ -143,7 +143,7 @@ static void * KVOContext = &KVOContext;
 {
     if (context == KVOContext) {
         if (object == [self webView] && [keyPath isEqualToString: @"URL"] && [object valueForKeyPath:keyPath] == nil){
-            NSLog(@"URL is nil. Reloading WebView");
+            NSLog(@"URL is nil. Reloading WKWebView");
             [(WKWebView*)_engineWebView reload];
         }
     } else {
