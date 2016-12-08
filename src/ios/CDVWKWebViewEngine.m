@@ -274,6 +274,8 @@ static void * KVOContext = &KVOContext;
     } else {
         [wkWebView.scrollView setDecelerationRate:UIScrollViewDecelerationRateFast];
     }
+
+    wkWebView.allowsBackForwardNavigationGestures = [settings cordovaBoolSettingForKey:@"AllowBackForwardNavigationGestures" defaultValue:NO];
 }
 
 - (void)updateWithInfo:(NSDictionary*)info
