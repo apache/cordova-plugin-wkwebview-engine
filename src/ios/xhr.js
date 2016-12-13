@@ -115,11 +115,23 @@
 
     // TODO: config event.target
     try {
+      event.__target = this.__makeTarget();
       this.dispatchEvent(event);
     } catch (e) {
       console.error('dispatchEvent() is not allowed?', e);
     }
   };
+
+  XHRPrototype.__makeTarget = function _wk_makeTarget(target) {
+    return {
+      response: this.__fakeData.__response,
+      responseText: this.__fakeData.__responseText,
+      b64response: this.__fakeData.__b64response,
+      getResponseHeader: function(header) {
+        return "";
+      }
+    };
+  }
 
   XHRPrototype.__set = function _wk_set(key, value) {
     if (!this.__fakeData) {
@@ -173,6 +185,7 @@
     }
     console.debug("XHR polyfill: Response received: ", context.__getURL());
     var buffer = decodeBase64(base64);
+    context.__set('b64response', base64);
     switch (context.responseText) {
       case 'arraybuffer':
         context.__set('response', buffer);
