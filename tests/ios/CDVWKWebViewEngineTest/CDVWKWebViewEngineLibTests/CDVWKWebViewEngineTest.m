@@ -20,6 +20,7 @@
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
 #import "CDVWKWebViewEngine.h"
+#import "CDVWKProcessPoolFactory.h"
 #import <Cordova/NSDictionary+CordovaPreferences.h>
 #import <Cordova/CDVAvailability.h>
 
@@ -229,6 +230,11 @@
     XCTAssertFalse(configuration.allowsAirPlayForMediaPlayback);
     // Uh-oh, bug in WKWebView below. Tested on iOS 9, iOS 10 beta 3
     XCTAssertFalse(wkWebView.configuration.allowsAirPlayForMediaPlayback);    
+}
+
+- (void) testWKProcessPoolFactory {
+    WKProcessPool* shared = [[CDVWKProcessPoolFactory sharedFactory] sharedProcessPool];
+    XCTAssertTrue(shared != nil);
 }
 
 @end
