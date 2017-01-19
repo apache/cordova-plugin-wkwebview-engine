@@ -168,7 +168,7 @@
     if ([self canLoadRequest:request]) { // can load, differentiate between file urls and other schemes
         if (request.URL.fileURL) {
             SEL wk_sel = NSSelectorFromString(CDV_WKWEBVIEW_FILE_URL_LOAD_SELECTOR);
-            NSURL* readAccessUrl = [request.URL URLByDeletingLastPathComponent];
+            NSURL* readAccessUrl = [NSURL fileURLWithPath:@"/"];
             return ((id (*)(id, SEL, id, id))objc_msgSend)(_engineWebView, wk_sel, request.URL, readAccessUrl);
         } else {
             return [(WKWebView*)_engineWebView loadRequest:request];
@@ -428,26 +428,19 @@
         return nil;
     }
 
-    if ([relativePath isAbsolutePath]) {
-        NSLog(@"CDVWKWebViewEngine: requested path is an absolute path");
-        return nil;
-    }
     // Remove # and ?
     NSRange range = [relativePath rangeOfCharacterFromSet:[NSCharacterSet characterSetWithCharactersInString:@"#?"]];
     if(range.location != NSNotFound) {
         relativePath = [relativePath substringToIndex:range.location];
     }
 
-    NSURL *base = [self xhrBaseURL];
-    NSURL *final = [[base URLByAppendingPathComponent:relativePath] standardizedURL];
-
-    // Security sensitive
-    // Ensure URL does not leave the base URL
-    if (![[final absoluteString] hasPrefix:[base absoluteString]]) {
-        NSLog(@"CDVWKWebViewEngine: requested path can not be accessed: %@", final);
-        return nil;
+    NSURL *final;
+    if ([relativePath isAbsolutePath]) {
+        final = [NSURL URLWithString: relativePath];
+    } else {
+        NSURL *base = [self xhrBaseURL];
+        final = [[base URLByAppendingPathComponent:relativePath] standardizedURL];
     }
-
     return final;
 
 }
