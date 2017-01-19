@@ -263,7 +263,7 @@ SEL WK_UnregisterSchemeSelector() {
            selector:@selector(onAppWillEnterForeground:)
                name:UIApplicationWillEnterForegroundNotification object:nil];
 
-    NSLog(@"Using WKWebView");
+    NSLog(@"Using Ionic WKWebView");
 
     [self addURLObserver];
 }
