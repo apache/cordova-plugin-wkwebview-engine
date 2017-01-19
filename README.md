@@ -90,6 +90,7 @@ Required Permissions
 WKWebView may not fully launch (the deviceready event may not fire) unless if the following is included in config.xml:
 #### config.xml
 ```
+<allow-navigation href="http://ionic.local/*"/>
 <feature name="CDVWKWebViewEngine">
   <param name="ios-package" value="CDVWKWebViewEngine" />
 </feature>
