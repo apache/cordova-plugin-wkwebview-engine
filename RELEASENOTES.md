@@ -21,6 +21,15 @@
 
 # Release Notes
 
+### 1.1.1 (Dec 07, 2016)
+* [CB-12224](https://issues.apache.org/jira/browse/CB-12224) Updated version and RELEASENOTES.md for release 1.1.1
+* [CB-10228](https://issues.apache.org/jira/browse/CB-10228) - AppendUserAgent not working with WKWebView
+* [CB-11997](https://issues.apache.org/jira/browse/CB-11997) - Add crash recovery for iOS 8
+* [CB-11917](https://issues.apache.org/jira/browse/CB-11917) - Remove pull request template checklist item: "iCLA has been submitted…"
+* [CB-11818](https://issues.apache.org/jira/browse/CB-11818) - Avoid retain cycle: WKUserContentController retains its message handler, to break it we cannot pass directly CDVWKWebViewEngine's instance
+* [CB-11832](https://issues.apache.org/jira/browse/CB-11832) Incremented plugin version.
+
+
 ### 1.1.0 (Sep 08, 2016)
 * [CB-11824](https://issues.apache.org/jira/browse/CB-11824) - Update tests to include objective-c tests
 * [CB-11554](https://issues.apache.org/jira/browse/CB-11554) - fixed unit tests
