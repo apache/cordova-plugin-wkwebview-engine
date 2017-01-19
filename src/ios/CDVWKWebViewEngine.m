@@ -20,13 +20,141 @@
 #import "CDVWKWebViewEngine.h"
 #import "CDVWKWebViewUIDelegate.h"
 #import <Cordova/NSDictionary+CordovaPreferences.h>
-
+#import <MobileCoreServices/MobileCoreServices.h>
 #import <objc/message.h>
 
 #define CDV_BRIDGE_NAME @"cordova"
-#define CDV_IONIC_WK @"xhr"
 #define CDV_IONIC_STOP_SCROLL @"stopScroll"
 #define CDV_WKWEBVIEW_FILE_URL_LOAD_SELECTOR @"loadFileURL:allowingReadAccessToURL:"
+
+Class WK_ContextControllerClass() {
+    static Class cls;
+    if (!cls) {
+        cls = [[[WKWebView new] valueForKey:@"browsingContextController"] class];
+    }
+    return cls;
+}
+
+SEL WK_RegisterSchemeSelector() {
+    return NSSelectorFromString(@"registerSchemeForCustomProtocol:");
+}
+
+SEL WK_UnregisterSchemeSelector() {
+    return NSSelectorFromString(@"unregisterSchemeForCustomProtocol:");
+}
+
+@implementation NSURLProtocol (WKWebViewSupport)
+
++ (void)wk_registerScheme:(NSString *)scheme {
+    Class cls = WK_ContextControllerClass();
+    SEL sel = WK_RegisterSchemeSelector();
+    if ([(id)cls respondsToSelector:sel]) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+        [(id)cls performSelector:sel withObject:scheme];
+#pragma clang diagnostic pop
+    }
+}
+
++ (void)wk_unregisterScheme:(NSString *)scheme {
+    Class cls = WK_ContextControllerClass();
+    SEL sel = WK_UnregisterSchemeSelector();
+    if ([(id)cls respondsToSelector:sel]) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+        [(id)cls performSelector:sel withObject:scheme];
+#pragma clang diagnostic pop
+    }
+}
+
+@end
+
+
+
+@interface IonicProtocol : NSURLProtocol
+- (instancetype)initWithRequest:(NSURLRequest *)request cachedResponse:(NSCachedURLResponse *)cachedResponse client:(id<NSURLProtocolClient>)client;
+@end
+
+@implementation IonicProtocol
+
++ (BOOL)canInitWithRequest:(NSURLRequest *)request
+{
+    return [[[request URL] host] isEqualToString:@"ionic.local"];
+}
+
++ (NSURLRequest*)canonicalRequestForRequest:(NSURLRequest*)request
+{
+    return request;
+}
+
+- (instancetype)initWithRequest:(NSURLRequest *)request cachedResponse:(NSCachedURLResponse *)cachedResponse client:(id<NSURLProtocolClient>)client
+{
+    return [super initWithRequest:request cachedResponse:cachedResponse client:client];
+}
+
+- (NSString *)guessMIMETypeFromFileName: (NSString *)fileName {
+    // Borrowed from http://stackoverflow.com/questions/2439020/wheres-the-iphone-mime-type-database
+    CFStringRef UTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (__bridge CFStringRef)[fileName pathExtension], NULL);
+    CFStringRef MIMEType = UTTypeCopyPreferredTagWithClass(UTI, kUTTagClassMIMEType);
+    CFRelease(UTI);
+    if (!MIMEType) {
+        return @"application/octet-stream";
+    }
+    return (__bridge NSString *)(MIMEType);
+}
+
+- (NSDictionary*)headerWithMime:(NSString*)mime size:(NSUInteger)size
+{
+    return @{@"Server": @"ionic.local",
+             @"Connection": @"Close",
+             @"Content-type": mime,
+             @"Content-Length": [NSString stringWithFormat:@"%lu", (unsigned long)size] };
+}
+
+
+- (void)startLoading
+{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        NSURLRequest *request = [self request];
+        NSString *path = [[request URL] path];
+        NSString *filename = [path lastPathComponent];
+        NSString *mime = [self guessMIMETypeFromFileName:filename];
+        if(!mime) {
+            mime = @"text/plain";
+        }
+        NSData *data = [NSData dataWithContentsOfFile:path];
+        NSUInteger size = [data length];
+        NSInteger statusCode;
+        if(data) {
+            statusCode = 200;
+        }else{
+            statusCode = 404;
+        }
+
+        NSDictionary *header = [self headerWithMime:mime size:size];
+        NSHTTPURLResponse *responde = [[NSHTTPURLResponse alloc] initWithURL:[request URL]
+                                                                  statusCode:statusCode
+                                                                 HTTPVersion:@"HTTP/1.1"
+                                                                headerFields:header];
+
+        NSLog(@"CDVWKWebViewEngine loaded (%lu bytes): %@", (unsigned long)size, filename);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [[self client] URLProtocol:self didReceiveResponse:responde cacheStoragePolicy:NSURLCacheStorageAllowedInMemoryOnly];
+            [[self client] URLProtocol:self didLoadData:data];
+            [[self client] URLProtocolDidFinishLoading:self];
+        });
+    });
+
+}
+
+- (void)stopLoading
+{
+    // not do anything
+}
+
+@end
+
+
 
 @interface CDVWKWebViewEngine ()
 
@@ -50,6 +178,11 @@
         if (NSClassFromString(@"WKWebView") == nil) {
             return nil;
         }
+
+        [NSURLProtocol wk_registerScheme:@"http"];
+        [NSURLProtocol registerClass:[IonicProtocol class]];
+
+
 
         self.engineWebView = [[WKWebView alloc] initWithFrame:frame];
         self.fileQueue = [[NSOperationQueue alloc] init];
@@ -82,20 +215,7 @@
 
     WKUserContentController* userContentController = [[WKUserContentController alloc] init];
     [userContentController addScriptMessageHandler:self name:CDV_BRIDGE_NAME];
-    [userContentController addScriptMessageHandler:self name:CDV_IONIC_WK];
     [userContentController addScriptMessageHandler:self name:CDV_IONIC_STOP_SCROLL];
-
-    // Inject XHR Polyfill
-    BOOL disableXHRPolyfill = [settings cordovaBoolSettingForKey:@"DisableXHRPolyfill" defaultValue:NO];
-    if (!disableXHRPolyfill) {
-        NSLog(@"CDVWKWebViewEngine: trying to inject XHR polyfill");
-        WKUserScript *xhrScript = [self xhrPolyfillScript];
-        if (xhrScript) {
-            [userContentController addUserScript:xhrScript];
-        }
-    } else {
-        NSLog(@"CDVWKWebViewEngine: skipped XHR polyfill");
-    }
 
 
     WKWebViewConfiguration* configuration = [self createConfigurationFromSettings:settings];
@@ -167,9 +287,10 @@
 {
     if ([self canLoadRequest:request]) { // can load, differentiate between file urls and other schemes
         if (request.URL.fileURL) {
-            SEL wk_sel = NSSelectorFromString(CDV_WKWEBVIEW_FILE_URL_LOAD_SELECTOR);
-            NSURL* readAccessUrl = [NSURL fileURLWithPath:@"/"];
-            return ((id (*)(id, SEL, id, id))objc_msgSend)(_engineWebView, wk_sel, request.URL, readAccessUrl);
+
+            NSURL *url = [[NSURL URLWithString:@"http://ionic.local"] URLByAppendingPathComponent:request.URL.path];
+            NSURLRequest *request2 = [NSURLRequest requestWithURL:url];
+            return [(WKWebView*)_engineWebView loadRequest:request2];
         } else {
             return [(WKWebView*)_engineWebView loadRequest:request];
         }
@@ -301,32 +422,12 @@
     return self.engineWebView;
 }
 
-- (WKUserScript*)xhrPolyfillScript
-{
-    NSString *scriptFile = [[NSBundle mainBundle] pathForResource:@"www/xhr" ofType:@"js"];
-    if (scriptFile == nil) {
-        NSLog(@"CDVWKWebViewEngine: XHR polyfill was not found");
-        return nil;
-    }
-    NSError *error = nil;
-    NSString *source = [NSString stringWithContentsOfFile:scriptFile encoding:NSUTF8StringEncoding error:&error];
-    if (source == nil || error != nil) {
-        NSLog(@"CDVWKWebViewEngine: XHR polyfill can not be loaded: %@", error);
-        return nil;
-    }
-    return [[WKUserScript alloc] initWithSource:source
-                                  injectionTime:WKUserScriptInjectionTimeAtDocumentStart
-                               forMainFrameOnly:YES];
-}
-
 #pragma mark WKScriptMessageHandler implementation
 
 - (void)userContentController:(WKUserContentController*)userContentController didReceiveScriptMessage:(WKScriptMessage*)message
 {
     if ([message.name isEqualToString:CDV_BRIDGE_NAME]) {
         [self handleCordovaMessage: message];
-    } else if ([message.name isEqualToString:CDV_IONIC_WK]) {
-        [self handleXHRMessage: message];
     } else if ([message.name isEqualToString:CDV_IONIC_STOP_SCROLL]) {
         [self handleStopScroll];
     }
@@ -362,34 +463,6 @@
     }
 }
 
-- (void)handleXHRMessage:(WKScriptMessage *)message
-{
-    NSString *str = message.body;
-    if (!str || ![str isKindOfClass:[NSString class]] || [str length] < 4) {
-        NSLog(@"CDVWKWebViewEngine: Invalid XHR request");
-        return;
-    }
-    NSData *data = [message.body dataUsingEncoding:NSUTF8StringEncoding];
-    NSError *error = nil;
-    NSDictionary *request = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
-    if (!request || error != nil) {
-        NSLog(@"CDVWKWebViewEngine: JSON response could not be parsed");
-        return;
-    }
-
-    NSNumber *reqID = request[@"id"];
-    if(!reqID || ![reqID isKindOfClass:[NSNumber class]]) {
-        NSLog(@"CDVWKWebViewEngine: XHR's ID is invalid'");
-        return;
-    }
-    NSString *url = request[@"url"];
-    if(!url || ![url isKindOfClass:[NSString class]]) {
-        NSLog(@"CDVWKWebViewEngine: XHR's URL is invalid'");
-        return;
-    }
-    [self sendXHRResponse:reqID path:url];
-}
-
 - (void)handleStopScroll
 {
     WKWebView* wkWebView = (WKWebView*)_engineWebView;
@@ -413,93 +486,6 @@
     for (UIView *child in [node subviews]) {
         [self recursiveStopScroll:child];
     }
-}
-
-- (NSURL *)xhrBaseURL
-{
-    return [[[(WKWebView*)_engineWebView URL] URLByStandardizingPath] URLByDeletingLastPathComponent];
-}
-
-
-- (NSURL *)securePathAppend:(NSString *)relativePath
-{
-    if (relativePath == nil || [relativePath length] == 0) {
-        NSLog(@"CDVWKWebViewEngine: requested path is empty");
-        return nil;
-    }
-
-    // Remove # and ?
-    NSRange range = [relativePath rangeOfCharacterFromSet:[NSCharacterSet characterSetWithCharactersInString:@"#?"]];
-    if(range.location != NSNotFound) {
-        relativePath = [relativePath substringToIndex:range.location];
-    }
-
-    NSURL *final;
-    if ([relativePath isAbsolutePath]) {
-        final = [NSURL URLWithString: relativePath];
-    } else {
-        NSURL *base = [self xhrBaseURL];
-        final = [[base URLByAppendingPathComponent:relativePath] standardizedURL];
-    }
-    return final;
-
-}
-
-- (void)sendXHRResponse:(NSNumber *)requestId path:(NSString *)requestPath
-{
-    [self.fileQueue addOperationWithBlock:^{
-        if (requestId == nil) {
-            NSLog(@"CDVWKWebViewEngine: requestID is empty");
-            return;
-        }
-
-        if ([requestId integerValue] <= 0) {
-            NSLog(@"CDVWKWebViewEngine: invalid requestID");
-            return;
-        }
-
-        NSLog(@"CDVWKWebViewEngine: XHR intercepted: %@", requestPath);
-
-        NSInteger requestIdInteger = [requestId integerValue];
-        NSURL *path = [self securePathAppend: requestPath];
-        if (path == nil) {
-            [self js_handleXHRError:requestIdInteger errorMessage:@"bad path"];
-            return;
-        }
-
-        NSError *error = nil;
-        NSData *source = [NSData dataWithContentsOfURL:path options:0 error:&error];
-        if (source == nil || error != nil) {
-            NSLog(@"CDVWKWebViewEngine: Error while opening file with path");
-            NSLog(@"CDVWKWebViewEngine: %@", error);
-            [self js_handleXHRError:requestIdInteger errorMessage:@"file not found"];
-            return;
-        }
-
-        NSString *content = [source base64EncodedStringWithOptions:0];
-        if (content == nil) {
-            [self js_handleXHRError:requestIdInteger errorMessage:@"file content can not be serialized. BUG!"];
-            return;
-        }
-
-        [self js_handleXHRResponse:requestIdInteger content:content];
-    }];
-}
-
-- (void) js_handleXHRResponse:(NSInteger)requestId content:(NSString *)base64
-{
-    NSString *jsCode = [NSString stringWithFormat:@"handleXHRResponse(%ld, \"%@\")",
-                        (long)requestId, base64];
-
-    [(WKWebView*)_engineWebView evaluateJavaScript:jsCode completionHandler:nil];
-}
-
-- (void) js_handleXHRError:(NSInteger)requestId errorMessage:(NSString *)message
-{
-    NSString *jsCode = [NSString stringWithFormat:@"handleXHRError(%ld, \"%@\")",
-                        (long)requestId, message];
-
-    [(WKWebView*)_engineWebView evaluateJavaScript:jsCode completionHandler:nil];
 }
 
 
