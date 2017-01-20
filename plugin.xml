@@ -55,6 +55,8 @@
         <header-file src="src/ios/CDVWKWebViewUIDelegate.h" />
         <source-file src="src/ios/CDVWKWebViewUIDelegate.m" />
 
+        <asset src="src/ios/wk-plugin.js" target="wk-plugin.js" />
+
     </platform>
 
 </plugin>

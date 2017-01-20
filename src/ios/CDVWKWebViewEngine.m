@@ -227,6 +227,18 @@ SEL WK_UnregisterSchemeSelector() {
     [userContentController addScriptMessageHandler:weakScriptMessageHandler name:CDV_BRIDGE_NAME];
     [userContentController addScriptMessageHandler:weakScriptMessageHandler name:CDV_IONIC_STOP_SCROLL];
 
+    // Inject XHR Polyfill
+    BOOL disableXHRPolyfill = [settings cordovaBoolSettingForKey:@"DisableXHRPolyfill" defaultValue:NO];
+    if (!disableXHRPolyfill) {
+        NSLog(@"CDVWKWebViewEngine: trying to inject XHR polyfill");
+        WKUserScript *wkScript = [self wkPluginScript];
+        if (wkScript) {
+            [userContentController addUserScript:wkScript];
+        }
+    } else {
+        NSLog(@"CDVWKWebViewEngine: skipped XHR polyfill");
+    }
+
     WKWebViewConfiguration* configuration = [self createConfigurationFromSettings:settings];
     configuration.userContentController = userContentController;
 
@@ -459,6 +471,24 @@ static void * KVOContext = &KVOContext;
 - (UIView*)webView
 {
     return self.engineWebView;
+}
+
+- (WKUserScript*)wkPluginScript
+{
+    NSString *scriptFile = [[NSBundle mainBundle] pathForResource:@"www/wk-plugin" ofType:@"js"];
+    if (scriptFile == nil) {
+        NSLog(@"CDVWKWebViewEngine: WK plugin was not found");
+        return nil;
+    }
+    NSError *error = nil;
+    NSString *source = [NSString stringWithContentsOfFile:scriptFile encoding:NSUTF8StringEncoding error:&error];
+    if (source == nil || error != nil) {
+        NSLog(@"CDVWKWebViewEngine: WK plugin can not be loaded: %@", error);
+        return nil;
+    }
+    return [[WKUserScript alloc] initWithSource:source
+                                  injectionTime:WKUserScriptInjectionTimeAtDocumentStart
+                               forMainFrameOnly:YES];
 }
 
 #pragma mark WKScriptMessageHandler implementation

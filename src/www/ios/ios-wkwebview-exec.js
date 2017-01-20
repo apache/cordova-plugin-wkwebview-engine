@@ -175,28 +175,3 @@ if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandl
       module.exports = execProxy;
    });
 }
-
-(function _wk_plugin() {
-  // Check if we are running in WKWebView
-  if (!window.webkit.messageHandlers) {
-    return;
-  }
-
-  var stopScrollFunc = null;
-  window.IonicStopScroll = {
-    stop: function stop(callback) {
-      if (!stopScrollFunc) {
-        stopScrollFunc = callback;
-        window.webkit.messageHandlers.stopScroll.postMessage('');
-      }
-    },
-    fire: function fire() {
-      stopScrollFunc && stopScrollFunc();
-      stopScrollFunc = null;
-    },
-    cancel: function cancel() {
-      stopScrollFunc = null;
-    }
-  };
-  console.debug("Ionic Stop Scroll injected!");
-})();
