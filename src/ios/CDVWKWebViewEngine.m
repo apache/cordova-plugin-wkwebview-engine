@@ -192,8 +192,6 @@ SEL WK_UnregisterSchemeSelector() {
         [NSURLProtocol wk_registerScheme:@"http"];
         [NSURLProtocol registerClass:[IonicProtocol class]];
 
-
-
         self.engineWebView = [[WKWebView alloc] initWithFrame:frame];
         self.fileQueue = [[NSOperationQueue alloc] init];
     }
@@ -227,6 +225,7 @@ SEL WK_UnregisterSchemeSelector() {
 
     WKUserContentController* userContentController = [[WKUserContentController alloc] init];
     [userContentController addScriptMessageHandler:weakScriptMessageHandler name:CDV_BRIDGE_NAME];
+    [userContentController addScriptMessageHandler:weakScriptMessageHandler name:CDV_IONIC_STOP_SCROLL];
 
     WKWebViewConfiguration* configuration = [self createConfigurationFromSettings:settings];
     configuration.userContentController = userContentController;
