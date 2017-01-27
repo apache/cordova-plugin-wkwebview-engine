@@ -19,6 +19,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		3050280F1E2973F700CF9F12 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7E9F518B19DA0F8300DA31AC /* CordovaLib.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = D2AAC07D0554694100DB518D;
+			remoteInfo = CordovaLib;
+		};
 		7E9F518F19DA0F8300DA31AC /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 7E9F518B19DA0F8300DA31AC /* CordovaLib.xcodeproj */;
@@ -168,6 +175,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				305028101E2973F700CF9F12 /* PBXTargetDependency */,
 			);
 			name = CDVWKWebViewEngineLib;
 			productName = CDVWKWebViewEngineLib;
@@ -275,6 +283,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		305028101E2973F700CF9F12 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = CordovaLib;
+			targetProxy = 3050280F1E2973F700CF9F12 /* PBXContainerItemProxy */;
+		};
 		7E9F51AD19DA10DE00DA31AC /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 7E9F519419DA102000DA31AC /* CDVWKWebViewEngineLib */;
