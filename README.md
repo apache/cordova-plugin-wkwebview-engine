@@ -69,7 +69,7 @@ This plugin creates a shared `WKProcessPool` which ensures the cookie sharing ha
 
 On an iOS 8 system, Apache Cordova during runtime will switch to using the UIWebView engine instead of using this plugin. If you want to use WKWebView on both iOS 8 and iOS 9 platforms, you will have to resort to using a local webserver.
 
-We have an [experimental plugin](https://github.com/apache/cordova-plugins/tree/master/wkwebview-engine-localhost) that does this. You would use that plugin instead of this one.
+We have an [experimental plugin](https://github.com/apache/cordova-plugins/tree/wkwebview-engine-localhost) that does this. You would use that plugin instead of this one.
 
 Application Transport Security (ATS) in iOS 9
 -----------
