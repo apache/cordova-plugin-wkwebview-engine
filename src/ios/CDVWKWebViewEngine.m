@@ -22,138 +22,11 @@
 #import <Cordova/NSDictionary+CordovaPreferences.h>
 #import <MobileCoreServices/MobileCoreServices.h>
 #import <objc/message.h>
+#import "GCDWebServer.h"
 
 #define CDV_BRIDGE_NAME @"cordova"
 #define CDV_IONIC_STOP_SCROLL @"stopScroll"
 #define CDV_WKWEBVIEW_FILE_URL_LOAD_SELECTOR @"loadFileURL:allowingReadAccessToURL:"
-
-Class WK_ContextControllerClass() {
-    static Class cls;
-    if (!cls) {
-        cls = [[[WKWebView new] valueForKey:@"browsingContextController"] class];
-    }
-    return cls;
-}
-
-SEL WK_RegisterSchemeSelector() {
-    return NSSelectorFromString(@"registerSchemeForCustomProtocol:");
-}
-
-SEL WK_UnregisterSchemeSelector() {
-    return NSSelectorFromString(@"unregisterSchemeForCustomProtocol:");
-}
-
-@implementation NSURLProtocol (WKWebViewSupport)
-
-+ (void)wk_registerScheme:(NSString *)scheme {
-    Class cls = WK_ContextControllerClass();
-    SEL sel = WK_RegisterSchemeSelector();
-    if ([(id)cls respondsToSelector:sel]) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-        [(id)cls performSelector:sel withObject:scheme];
-#pragma clang diagnostic pop
-    }
-}
-
-+ (void)wk_unregisterScheme:(NSString *)scheme {
-    Class cls = WK_ContextControllerClass();
-    SEL sel = WK_UnregisterSchemeSelector();
-    if ([(id)cls respondsToSelector:sel]) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-        [(id)cls performSelector:sel withObject:scheme];
-#pragma clang diagnostic pop
-    }
-}
-
-@end
-
-
-
-@interface IonicProtocol : NSURLProtocol
-- (instancetype)initWithRequest:(NSURLRequest *)request cachedResponse:(NSCachedURLResponse *)cachedResponse client:(id<NSURLProtocolClient>)client;
-@end
-
-@implementation IonicProtocol
-
-+ (BOOL)canInitWithRequest:(NSURLRequest *)request
-{
-    return [[[request URL] host] isEqualToString:@"ionic.local"];
-}
-
-+ (NSURLRequest*)canonicalRequestForRequest:(NSURLRequest*)request
-{
-    return request;
-}
-
-- (instancetype)initWithRequest:(NSURLRequest *)request cachedResponse:(NSCachedURLResponse *)cachedResponse client:(id<NSURLProtocolClient>)client
-{
-    return [super initWithRequest:request cachedResponse:cachedResponse client:client];
-}
-
-- (NSString *)guessMIMETypeFromFileName: (NSString *)fileName {
-    // Borrowed from http://stackoverflow.com/questions/2439020/wheres-the-iphone-mime-type-database
-    CFStringRef UTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (__bridge CFStringRef)[fileName pathExtension], NULL);
-    CFStringRef MIMEType = UTTypeCopyPreferredTagWithClass(UTI, kUTTagClassMIMEType);
-    CFRelease(UTI);
-    if (!MIMEType) {
-        return @"application/octet-stream";
-    }
-    return (__bridge NSString *)(MIMEType);
-}
-
-- (NSDictionary*)headerWithMime:(NSString*)mime size:(NSUInteger)size
-{
-    return @{@"Server": @"ionic.local",
-             @"Connection": @"Close",
-             @"Content-type": mime,
-             @"Content-Length": [NSString stringWithFormat:@"%lu", (unsigned long)size] };
-}
-
-
-- (void)startLoading
-{
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        NSURLRequest *request = [self request];
-        NSString *path = [[request URL] path];
-        NSString *filename = [path lastPathComponent];
-        NSString *mime = [self guessMIMETypeFromFileName:filename];
-        if(!mime) {
-            mime = @"text/plain";
-        }
-        NSData *data = [NSData dataWithContentsOfFile:path];
-        NSUInteger size = [data length];
-        NSInteger statusCode;
-        if(data) {
-            statusCode = 200;
-        }else{
-            statusCode = 404;
-        }
-
-        NSDictionary *header = [self headerWithMime:mime size:size];
-        NSHTTPURLResponse *responde = [[NSHTTPURLResponse alloc] initWithURL:[request URL]
-                                                                  statusCode:statusCode
-                                                                 HTTPVersion:@"HTTP/1.1"
-                                                                headerFields:header];
-
-        NSLog(@"CDVWKWebViewEngine loaded (%lu bytes): %@", (unsigned long)size, filename);
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [[self client] URLProtocol:self didReceiveResponse:responde cacheStoragePolicy:NSURLCacheStorageAllowedInMemoryOnly];
-            [[self client] URLProtocol:self didLoadData:data];
-            [[self client] URLProtocolDidFinishLoading:self];
-        });
-    });
-
-}
-
-- (void)stopLoading
-{
-    // not do anything
-}
-
-@end
-
 
 
 @interface CDVWKWeakScriptMessageHandler : NSObject <WKScriptMessageHandler>
@@ -189,11 +62,12 @@ SEL WK_UnregisterSchemeSelector() {
             return nil;
         }
 
-        [NSURLProtocol wk_registerScheme:@"http"];
-        [NSURLProtocol registerClass:[IonicProtocol class]];
-
         self.engineWebView = [[WKWebView alloc] initWithFrame:frame];
         self.fileQueue = [[NSOperationQueue alloc] init];
+
+        GCDWebServer* webServer = [[GCDWebServer alloc] init];
+        [webServer addGETHandlerForBasePath:@"/" directoryPath:@"/" indexFilename:nil cacheAge:3600 allowRangeRequests:YES];
+        [webServer startWithPort:8080 bonjourName:nil];
     }
 
     return self;
@@ -270,9 +144,9 @@ SEL WK_UnregisterSchemeSelector() {
     // check if content thread has died on resume
     NSLog(@"%@", @"CDVWKWebViewEngine will reload WKWebView if required on resume");
     [[NSNotificationCenter defaultCenter]
-        addObserver:self
-           selector:@selector(onAppWillEnterForeground:)
-               name:UIApplicationWillEnterForegroundNotification object:nil];
+     addObserver:self
+     selector:@selector(onAppWillEnterForeground:)
+     name:UIApplicationWillEnterForegroundNotification object:nil];
 
     NSLog(@"Using Ionic WKWebView");
 
@@ -339,7 +213,7 @@ static void * KVOContext = &KVOContext;
     if ([self canLoadRequest:request]) { // can load, differentiate between file urls and other schemes
         if (request.URL.fileURL) {
 
-            NSURL *url = [[NSURL URLWithString:@"http://ionic.local"] URLByAppendingPathComponent:request.URL.path];
+            NSURL *url = [[NSURL URLWithString:@"http://localhost:8080"] URLByAppendingPathComponent:request.URL.path];
             NSURLRequest *request2 = [NSURLRequest requestWithURL:url];
             return [(WKWebView*)_engineWebView loadRequest:request2];
         } else {

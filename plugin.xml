@@ -54,8 +54,42 @@
         <source-file src="src/ios/CDVWKWebViewEngine.m" />
         <header-file src="src/ios/CDVWKWebViewUIDelegate.h" />
         <source-file src="src/ios/CDVWKWebViewUIDelegate.m" />
-
         <asset src="src/ios/wk-plugin.js" target="wk-plugin.js" />
+
+        <!--GCDWebServer headers-->
+        <header-file src="src/ios/GCDWebServer/Core/GCDWebServer.h" />
+        <header-file src="src/ios/GCDWebServer/Core/GCDWebServerConnection.h" />
+        <header-file src="src/ios/GCDWebServer/Core/GCDWebServerFunctions.h" />
+        <header-file src="src/ios/GCDWebServer/Core/GCDWebServerHTTPStatusCodes.h" />
+        <header-file src="src/ios/GCDWebServer/Core/GCDWebServerPrivate.h" />
+        <header-file src="src/ios/GCDWebServer/Core/GCDWebServerRequest.h" />
+        <header-file src="src/ios/GCDWebServer/Core/GCDWebServerResponse.h" />
+        <header-file src="src/ios/GCDWebServer/Requests/GCDWebServerDataRequest.h" />
+        <header-file src="src/ios/GCDWebServer/Requests/GCDWebServerFileRequest.h" />
+        <header-file src="src/ios/GCDWebServer/Requests/GCDWebServerMultiPartFormRequest.h" />
+        <header-file src="src/ios/GCDWebServer/Requests/GCDWebServerURLEncodedFormRequest.h" />
+        <header-file src="src/ios/GCDWebServer/Responses/GCDWebServerDataResponse.h" />
+        <header-file src="src/ios/GCDWebServer/Responses/GCDWebServerErrorResponse.h" />
+        <header-file src="src/ios/GCDWebServer/Responses/GCDWebServerFileResponse.h" />
+        <header-file src="src/ios/GCDWebServer/Responses/GCDWebServerStreamedResponse.h" />
+
+        <!--GCDWebServer source-->
+        <source-file src="src/ios/GCDWebServer/Core/GCDWebServer.m" />
+        <source-file src="src/ios/GCDWebServer/Core/GCDWebServerConnection.m" />
+        <source-file src="src/ios/GCDWebServer/Core/GCDWebServerFunctions.m" />
+        <source-file src="src/ios/GCDWebServer/Core/GCDWebServerRequest.m" />
+        <source-file src="src/ios/GCDWebServer/Core/GCDWebServerResponse.m" />
+        <source-file src="src/ios/GCDWebServer/Requests/GCDWebServerDataRequest.m" />
+        <source-file src="src/ios/GCDWebServer/Requests/GCDWebServerFileRequest.m" />
+        <source-file src="src/ios/GCDWebServer/Requests/GCDWebServerMultiPartFormRequest.m" />
+        <source-file src="src/ios/GCDWebServer/Requests/GCDWebServerURLEncodedFormRequest.m" />
+        <source-file src="src/ios/GCDWebServer/Responses/GCDWebServerDataResponse.m" />
+        <source-file src="src/ios/GCDWebServer/Responses/GCDWebServerErrorResponse.m" />
+        <source-file src="src/ios/GCDWebServer/Responses/GCDWebServerFileResponse.m" />
+        <source-file src="src/ios/GCDWebServer/Responses/GCDWebServerStreamedResponse.m" />
+
+        <!--GCDWebServer dependencies-->
+        <framework src="libz.tbd" />
 
     </platform>
 
