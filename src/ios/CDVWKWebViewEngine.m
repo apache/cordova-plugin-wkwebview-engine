@@ -44,6 +44,7 @@
 @property (nonatomic, strong, readwrite) UIView* engineWebView;
 @property (nonatomic, strong, readwrite) id <WKUIDelegate> uiDelegate;
 @property (nonatomic, weak) id <WKScriptMessageHandler> weakScriptMessageHandler;
+@property (nonatomic, strong) GCDWebServer *webServer;
 
 @end
 
@@ -65,9 +66,9 @@
         self.engineWebView = [[WKWebView alloc] initWithFrame:frame];
         self.fileQueue = [[NSOperationQueue alloc] init];
 
-        GCDWebServer* webServer = [[GCDWebServer alloc] init];
-        [webServer addGETHandlerForBasePath:@"/" directoryPath:@"/" indexFilename:nil cacheAge:3600 allowRangeRequests:YES];
-        [webServer startWithPort:8080 bonjourName:nil];
+        self.webServer = [[GCDWebServer alloc] init];
+        [self.webServer addGETHandlerForBasePath:@"/" directoryPath:@"/" indexFilename:nil cacheAge:3600 allowRangeRequests:YES];
+        [self.webServer startWithPort:8080 bonjourName:nil];
     }
 
     return self;
