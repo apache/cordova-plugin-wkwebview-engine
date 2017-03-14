@@ -14,6 +14,15 @@
     return;
   }
 
+  if (typeof window.wkRewriteURL === 'undefined') {
+    window.wkRewriteURL = function wkRewriteURL(path) {
+      if (!path) {
+        return path;
+      }
+      return path.replace('file:///', '/').replace('file://', '/');
+    }
+  }
+
   var stopScrollFunc = null;
   window.IonicStopScroll = {
     stop: function stop(callback) {
