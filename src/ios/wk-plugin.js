@@ -17,10 +17,10 @@
       return url;
     }
     url = url.substr(7); // len("file://) == 7
-    if (url.length > 0 && url[0] === '/') { // ensure the new URL starts with /
-      return url;
+    if (url.length == 0 || url[0] !== '/') { // ensure the new URL starts with /
+      url = '/' + url;
     }
-    return '/' + url;
+    return 'http://localhost:8080' + url;
   }
 
   if (window.location.hostname === 'localhost') {
