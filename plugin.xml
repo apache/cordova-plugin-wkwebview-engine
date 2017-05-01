@@ -42,6 +42,7 @@
         </js-module>
 
         <config-file target="config.xml" parent="/*">
+            <allow-navigation href="http://localhost:8080/*"/>
             <feature name="CDVWKWebViewEngine">
                 <param name="ios-package" value="CDVWKWebViewEngine" />
             </feature>
