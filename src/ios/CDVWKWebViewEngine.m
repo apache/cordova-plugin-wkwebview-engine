@@ -21,11 +21,14 @@
 #import "CDVWKWebViewUIDelegate.h"
 #import "CDVWKProcessPoolFactory.h"
 #import <Cordova/NSDictionary+CordovaPreferences.h>
-
+#import <MobileCoreServices/MobileCoreServices.h>
 #import <objc/message.h>
+#import "GCDWebServer.h"
 
 #define CDV_BRIDGE_NAME @"cordova"
+#define CDV_IONIC_STOP_SCROLL @"stopScroll"
 #define CDV_WKWEBVIEW_FILE_URL_LOAD_SELECTOR @"loadFileURL:allowingReadAccessToURL:"
+
 
 @interface CDVWKWeakScriptMessageHandler : NSObject <WKScriptMessageHandler>
 
@@ -38,9 +41,11 @@
 
 @interface CDVWKWebViewEngine ()
 
+@property (nonatomic, strong, readwrite) NSOperationQueue* fileQueue;
 @property (nonatomic, strong, readwrite) UIView* engineWebView;
 @property (nonatomic, strong, readwrite) id <WKUIDelegate> uiDelegate;
 @property (nonatomic, weak) id <WKScriptMessageHandler> weakScriptMessageHandler;
+@property (nonatomic, strong) GCDWebServer *webServer;
 
 @end
 
@@ -60,8 +65,20 @@
         }
 
         self.engineWebView = [[WKWebView alloc] initWithFrame:frame];
-    }
+        self.fileQueue = [[NSOperationQueue alloc] init];
 
+        self.webServer = [[GCDWebServer alloc] init];
+        [self.webServer addGETHandlerForBasePath:@"/" directoryPath:@"/" indexFilename:nil cacheAge:3600 allowRangeRequests:YES];
+        [self.webServer startWithPort:8080 bonjourName:nil];
+
+        // TODO: unlisten on dealloc
+        NSNotificationCenter *notifications = [NSNotificationCenter defaultCenter];
+        [notifications addObserver:self selector:@selector(onKeyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
+        [notifications addObserver:self selector:@selector(onKeyboardDidHide:) name:UIKeyboardDidHideNotification object:nil];
+        [notifications addObserver:self selector:@selector(onKeyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
+        [notifications addObserver:self selector:@selector(onKeyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
+        [notifications addObserver:self selector:@selector(onKeyboardDidFrame:) name:UIKeyboardDidChangeFrameNotification object:nil];
+    }
     return self;
 }
 
@@ -91,6 +108,19 @@
 
     WKUserContentController* userContentController = [[WKUserContentController alloc] init];
     [userContentController addScriptMessageHandler:weakScriptMessageHandler name:CDV_BRIDGE_NAME];
+    [userContentController addScriptMessageHandler:weakScriptMessageHandler name:CDV_IONIC_STOP_SCROLL];
+
+    // Inject XHR Polyfill
+    BOOL disableXHRPolyfill = [settings cordovaBoolSettingForKey:@"DisableXHRPolyfill" defaultValue:NO];
+    if (!disableXHRPolyfill) {
+        NSLog(@"CDVWKWebViewEngine: trying to inject XHR polyfill");
+        WKUserScript *wkScript = [self wkPluginScript];
+        if (wkScript) {
+            [userContentController addUserScript:wkScript];
+        }
+    } else {
+        NSLog(@"CDVWKWebViewEngine: skipped XHR polyfill");
+    }
 
     WKWebViewConfiguration* configuration = [self createConfigurationFromSettings:settings];
     configuration.userContentController = userContentController;
@@ -123,11 +153,11 @@
     // check if content thread has died on resume
     NSLog(@"%@", @"CDVWKWebViewEngine will reload WKWebView if required on resume");
     [[NSNotificationCenter defaultCenter]
-        addObserver:self
-           selector:@selector(onAppWillEnterForeground:)
-               name:UIApplicationWillEnterForegroundNotification object:nil];
+     addObserver:self
+     selector:@selector(onAppWillEnterForeground:)
+     name:UIApplicationWillEnterForegroundNotification object:nil];
 
-    NSLog(@"Using WKWebView");
+    NSLog(@"Using Ionic WKWebView");
 
     [self addURLObserver];
 }
@@ -173,27 +203,33 @@ static void * KVOContext = &KVOContext;
 {
     BOOL title_is_nil = (title == nil);
     BOOL location_is_blank = [[location absoluteString] isEqualToString:@"about:blank"];
-    
+
     BOOL reload = (title_is_nil || location_is_blank);
-    
+
 #ifdef DEBUG
     NSLog(@"%@", @"CDVWKWebViewEngine shouldReloadWebView::");
     NSLog(@"CDVWKWebViewEngine shouldReloadWebView title: %@", title);
     NSLog(@"CDVWKWebViewEngine shouldReloadWebView location: %@", [location absoluteString]);
     NSLog(@"CDVWKWebViewEngine shouldReloadWebView reload: %u", reload);
 #endif
-    
+
     return reload;
 }
-
 
 - (id)loadRequest:(NSURLRequest*)request
 {
     if ([self canLoadRequest:request]) { // can load, differentiate between file urls and other schemes
         if (request.URL.fileURL) {
-            SEL wk_sel = NSSelectorFromString(CDV_WKWEBVIEW_FILE_URL_LOAD_SELECTOR);
-            NSURL* readAccessUrl = [request.URL URLByDeletingLastPathComponent];
-            return ((id (*)(id, SEL, id, id))objc_msgSend)(_engineWebView, wk_sel, request.URL, readAccessUrl);
+
+            NSURL *url = [[NSURL URLWithString:@"http://localhost:8080"] URLByAppendingPathComponent:request.URL.path];
+            if(request.URL.query) {
+                url = [NSURL URLWithString:[@"?" stringByAppendingString:request.URL.query] relativeToURL:url];
+            }
+            if(request.URL.fragment) {
+                url = [NSURL URLWithString:[@"#" stringByAppendingString:request.URL.fragment] relativeToURL:url];
+            }
+            NSURLRequest *request2 = [NSURLRequest requestWithURL:url];
+            return [(WKWebView*)_engineWebView loadRequest:request2];
         } else {
             return [(WKWebView*)_engineWebView loadRequest:request];
         }
@@ -263,6 +299,8 @@ static void * KVOContext = &KVOContext;
         }
     }
 
+    wkWebView.scrollView.scrollEnabled = [settings cordovaFloatSettingForKey:@"ScrollEnabled" defaultValue:YES];
+
     NSString* decelerationSetting = [settings cordovaSettingForKey:@"WKWebViewDecelerationSpeed"];
     if (!decelerationSetting) {
         // Fallback to the UIWebView-named preference
@@ -325,14 +363,37 @@ static void * KVOContext = &KVOContext;
     return self.engineWebView;
 }
 
+- (WKUserScript*)wkPluginScript
+{
+    NSString *scriptFile = [[NSBundle mainBundle] pathForResource:@"www/wk-plugin" ofType:@"js"];
+    if (scriptFile == nil) {
+        NSLog(@"CDVWKWebViewEngine: WK plugin was not found");
+        return nil;
+    }
+    NSError *error = nil;
+    NSString *source = [NSString stringWithContentsOfFile:scriptFile encoding:NSUTF8StringEncoding error:&error];
+    if (source == nil || error != nil) {
+        NSLog(@"CDVWKWebViewEngine: WK plugin can not be loaded: %@", error);
+        return nil;
+    }
+    return [[WKUserScript alloc] initWithSource:source
+                                  injectionTime:WKUserScriptInjectionTimeAtDocumentStart
+                               forMainFrameOnly:YES];
+}
+
 #pragma mark WKScriptMessageHandler implementation
 
 - (void)userContentController:(WKUserContentController*)userContentController didReceiveScriptMessage:(WKScriptMessage*)message
 {
-    if (![message.name isEqualToString:CDV_BRIDGE_NAME]) {
-        return;
+    if ([message.name isEqualToString:CDV_BRIDGE_NAME]) {
+        [self handleCordovaMessage: message];
+    } else if ([message.name isEqualToString:CDV_IONIC_STOP_SCROLL]) {
+        [self handleStopScroll];
     }
+}
 
+- (void)handleCordovaMessage:(WKScriptMessage*)message
+{
     CDVViewController* vc = (CDVViewController*)self.viewController;
 
     NSArray* jsonEntry = message.body; // NSString:callbackId, NSString:service, NSString:action, NSArray:args
@@ -351,15 +412,41 @@ static void * KVOContext = &KVOContext;
             commandJson = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
         }
 
-            static NSUInteger maxLogLength = 1024;
-            NSString* commandString = ([commandJson length] > maxLogLength) ?
-                [NSString stringWithFormat : @"%@[...]", [commandJson substringToIndex:maxLogLength]] :
-                commandJson;
+        static NSUInteger maxLogLength = 1024;
+        NSString* commandString = ([commandJson length] > maxLogLength) ?
+        [NSString stringWithFormat : @"%@[...]", [commandJson substringToIndex:maxLogLength]] :
+        commandJson;
 
-            NSLog(@"FAILED pluginJSON = %@", commandString);
+        NSLog(@"FAILED pluginJSON = %@", commandString);
 #endif
     }
 }
+
+- (void)handleStopScroll
+{
+    WKWebView* wkWebView = (WKWebView*)_engineWebView;
+    NSLog(@"CDVWKWebViewEngine: handleStopScroll");
+    [self recursiveStopScroll:[wkWebView scrollView]];
+    [wkWebView evaluateJavaScript:@"window.IonicStopScroll.fire()" completionHandler:nil];
+}
+
+- (void)recursiveStopScroll:(UIView *)node
+{
+    if([node isKindOfClass: [UIScrollView class]]) {
+        UIScrollView *nodeAsScroll = (UIScrollView *)node;
+
+        if([nodeAsScroll isScrollEnabled] && ![nodeAsScroll isHidden]) {
+            [nodeAsScroll setScrollEnabled: NO];
+            [nodeAsScroll setScrollEnabled: YES];
+        }
+    }
+
+    // iterate tree recursivelly
+    for (UIView *child in [node subviews]) {
+        [self recursiveStopScroll:child];
+    }
+}
+
 
 #pragma mark WKNavigationDelegate implementation
 
@@ -412,7 +499,8 @@ static void * KVOContext = &KVOContext;
     return NO;
 }
 
-- (void) webView: (WKWebView *) webView decidePolicyForNavigationAction: (WKNavigationAction*) navigationAction decisionHandler: (void (^)(WKNavigationActionPolicy)) decisionHandler
+
+- (void) webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction*)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
 {
     NSURL* url = [navigationAction.request URL];
     CDVViewController* vc = (CDVViewController*)self.viewController;
@@ -440,21 +528,75 @@ static void * KVOContext = &KVOContext;
         }
     }
 
-    if (anyPluginsResponded) {
-        return decisionHandler(shouldAllowRequest);
+    if (!anyPluginsResponded) {
+        /*
+         * Handle all other types of urls (tel:, sms:), and requests to load a url in the main webview.
+         */
+        shouldAllowRequest = [self defaultResourcePolicyForURL:url];
+        if (!shouldAllowRequest) {
+            [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:CDVPluginHandleOpenURLNotification object:url]];
+        }
     }
 
-    /*
-     * Handle all other types of urls (tel:, sms:), and requests to load a url in the main webview.
-     */
-    BOOL shouldAllowNavigation = [self defaultResourcePolicyForURL:url];
-    if (shouldAllowNavigation) {
-        return decisionHandler(YES);
+
+    if (shouldAllowRequest) {
+        NSString *scheme = url.scheme;
+        if ([scheme isEqualToString:@"tel"] ||
+            [scheme isEqualToString:@"mailto"] ||
+            [scheme isEqualToString:@"facetime"] ||
+            [scheme isEqualToString:@"sms"] ||
+            [scheme isEqualToString:@"maps"] ||
+            [scheme isEqualToString:@"itms-services"]) {
+            [[UIApplication sharedApplication] openURL:url];
+            decisionHandler(WKNavigationActionPolicyCancel);
+        } else {
+            decisionHandler(WKNavigationActionPolicyAllow);
+        }
     } else {
-        [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:CDVPluginHandleOpenURLNotification object:url]];
+        decisionHandler(WKNavigationActionPolicyCancel);
     }
+}
 
-    return decisionHandler(NO);
+#pragma mark WKNavigationDelegate implementation
+
+- (void) onKeyboardWillHide:(id)sender
+{
+    NSLog(@"CDVWKWebViewEngine: onKeyboardWillHide (restoring size)");
+    CGRect frame = [[UIScreen mainScreen] bounds];
+
+    [_engineWebView setFrame:frame];
+    self.openingKeyboard = NO;
+}
+
+- (void) onKeyboardDidHide:(id)sender
+{
+    NSLog(@"CDVWKWebViewEngine: onKeyboardDidHide");
+}
+
+- (void) onKeyboardDidShow:(id)sender
+{
+    NSLog(@"CDVWKWebViewEngine: onKeyboardDidShow");
+}
+
+- (void) onKeyboardWillShow:(NSNotification *)note
+{
+    NSLog(@"CDVWKWebViewEngine: onKeyboardWillShow");
+}
+
+- (void) onKeyboardDidFrame:(NSNotification *)note
+{
+    NSLog(@"CDVWKWebViewEngine: onKeyboardDidFrame");
+    CGRect frame = [[UIScreen mainScreen] bounds];
+    CGRect rect;
+    [[note.userInfo valueForKey:UIKeyboardFrameEndUserInfoKey] getValue:&rect];
+
+    if (self.openingKeyboard) {
+        [_engineWebView setTransform:CGAffineTransformIdentity];
+        [_engineWebView setFrame:CGRectMake(
+                                                frame.origin.x, frame.origin.y,
+                                                frame.size.width, frame.size.height - rect.size.height)];
+    }
+    self.openingKeyboard = NO;
 }
 
 @end
