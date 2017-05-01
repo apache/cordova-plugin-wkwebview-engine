@@ -216,6 +216,12 @@ static void * KVOContext = &KVOContext;
         if (request.URL.fileURL) {
 
             NSURL *url = [[NSURL URLWithString:@"http://localhost:8080"] URLByAppendingPathComponent:request.URL.path];
+            if(request.URL.query) {
+                url = [NSURL URLWithString:[@"?" stringByAppendingString:request.URL.query] relativeToURL:url];
+            }
+            if(request.URL.fragment) {
+                url = [NSURL URLWithString:[@"#" stringByAppendingString:request.URL.fragment] relativeToURL:url];
+            }
             NSURLRequest *request2 = [NSURLRequest requestWithURL:url];
             return [(WKWebView*)_engineWebView loadRequest:request2];
         } else {
