@@ -63,6 +63,15 @@ Install the WKWebViewPlugin:
 ionic plugin add https://github.com/driftyco/cordova-plugin-wkwebview-engine.git --save
 ```
 
+**Note:** 
+
+If you already had [apache/cordova-plugin-wkwebview-engine](https://github.com/apache/cordova-plugin-wkwebview-engine) install make sure that is removed before using this version.
+
+```
+ionic plugin rm cordova-plugin-wkwebview-engine
+```
+
+
 Build the platform:
 
 ```
