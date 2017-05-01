@@ -535,7 +535,12 @@ static void * KVOContext = &KVOContext;
 
     if (shouldAllowRequest) {
         NSString *scheme = url.scheme;
-        if ([scheme isEqualToString:@"tel"] || [scheme isEqualToString:@"mailto"]) {
+        if ([scheme isEqualToString:@"tel"] || 
+            [scheme isEqualToString:@"mailto"] ||
+            [scheme isEqualToString:@"facetime"] ||
+            [scheme isEqualToString:@"sms"] ||
+            [scheme isEqualToString:@"maps"] ||
+            [scheme isEqualToString:@"itms-services"]) {
             [[UIApplication sharedApplication] openURL:url];
             decisionHandler(WKNavigationActionPolicyCancel);
         } else {
