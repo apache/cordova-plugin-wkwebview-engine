@@ -70,8 +70,15 @@
         self.webServer = [[GCDWebServer alloc] init];
         [self.webServer addGETHandlerForBasePath:@"/" directoryPath:@"/" indexFilename:nil cacheAge:3600 allowRangeRequests:YES];
         [self.webServer startWithPort:8080 bonjourName:nil];
-    }
 
+        // TODO: unlisten on dealloc
+        NSNotificationCenter *notifications = [NSNotificationCenter defaultCenter];
+        [notifications addObserver:self selector:@selector(onKeyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
+        [notifications addObserver:self selector:@selector(onKeyboardDidHide:) name:UIKeyboardDidHideNotification object:nil];
+        [notifications addObserver:self selector:@selector(onKeyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
+        [notifications addObserver:self selector:@selector(onKeyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
+        [notifications addObserver:self selector:@selector(onKeyboardDidFrame:) name:UIKeyboardDidChangeFrameNotification object:nil];
+    }
     return self;
 }
 
@@ -208,7 +215,6 @@ static void * KVOContext = &KVOContext;
 
     return reload;
 }
-
 
 - (id)loadRequest:(NSURLRequest*)request
 {
@@ -535,7 +541,7 @@ static void * KVOContext = &KVOContext;
 
     if (shouldAllowRequest) {
         NSString *scheme = url.scheme;
-        if ([scheme isEqualToString:@"tel"] || 
+        if ([scheme isEqualToString:@"tel"] ||
             [scheme isEqualToString:@"mailto"] ||
             [scheme isEqualToString:@"facetime"] ||
             [scheme isEqualToString:@"sms"] ||
@@ -549,6 +555,48 @@ static void * KVOContext = &KVOContext;
     } else {
         decisionHandler(WKNavigationActionPolicyCancel);
     }
+}
+
+#pragma mark WKNavigationDelegate implementation
+
+- (void) onKeyboardWillHide:(id)sender
+{
+    NSLog(@"CDVWKWebViewEngine: onKeyboardWillHide (restoring size)");
+    CGRect frame = [[UIScreen mainScreen] bounds];
+
+    [_engineWebView setFrame:frame];
+    self.openingKeyboard = NO;
+}
+
+- (void) onKeyboardDidHide:(id)sender
+{
+    NSLog(@"CDVWKWebViewEngine: onKeyboardDidHide");
+}
+
+- (void) onKeyboardDidShow:(id)sender
+{
+    NSLog(@"CDVWKWebViewEngine: onKeyboardDidShow");
+}
+
+- (void) onKeyboardWillShow:(NSNotification *)note
+{
+    NSLog(@"CDVWKWebViewEngine: onKeyboardWillShow");
+}
+
+- (void) onKeyboardDidFrame:(NSNotification *)note
+{
+    NSLog(@"CDVWKWebViewEngine: onKeyboardDidFrame");
+    CGRect frame = [[UIScreen mainScreen] bounds];
+    CGRect rect;
+    [[note.userInfo valueForKey:UIKeyboardFrameEndUserInfoKey] getValue:&rect];
+
+    if (self.openingKeyboard) {
+        [_engineWebView setTransform:CGAffineTransformIdentity];
+        [_engineWebView setFrame:CGRectMake(
+                                                frame.origin.x, frame.origin.y,
+                                                frame.size.width, frame.size.height - rect.size.height)];
+    }
+    self.openingKeyboard = NO;
 }
 
 @end
