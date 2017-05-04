@@ -1,15 +1,13 @@
 
 (function _wk_plugin() {
   // Check if we are running in WKWebView
-  if (!window.webkit) {
+  if (!window.webkit || !window.webkit.messageHandlers) {
     return;
   }
+  // Initialize Ionic
+  window.Ionic = window.Ionic || {};
 
-  if (!window.webkit.messageHandlers) {
-    return;
-  }
-
-  function wkRewriteURL(url) {
+  function normalizeURL(url) {
     if (!url) {
       return url;
     }
@@ -23,8 +21,12 @@
     return 'http://localhost:8080' + url;
   }
   if (typeof window.wkRewriteURL === 'undefined') {
-    window.wkRewriteURL = wkRewriteURL;
+    window.wkRewriteURL = function (url) {
+      console.warn('wkRewriteURL is deprecated, use normalizeURL instead');
+      return normalizeURL(url);
+    }
   }
+  window.Ionic.normalizeURL = normalizeURL;
 
   var xhrPrototype = window.XMLHttpRequest.prototype;
   var originalOpen = xhrPrototype.open;
@@ -42,7 +44,7 @@
   }
 
   var stopScrollFunc = null;
-  window.IonicStopScroll = {
+  var stopScroll = {
     stop: function stop(callback) {
       if (!stopScrollFunc) {
         stopScrollFunc = callback;
@@ -57,5 +59,10 @@
       stopScrollFunc = null;
     }
   };
+
+  window.Ionic.StopScroll = stopScroll;
+  // deprecated
+  window.IonicStopScroll = stopScroll;
+
   console.debug("Ionic Stop Scroll injected!");
 })();
