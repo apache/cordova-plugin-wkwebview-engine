@@ -104,15 +104,19 @@
     [userContentController addScriptMessageHandler:weakScriptMessageHandler name:CDV_IONIC_STOP_SCROLL];
 
     // Inject XHR Polyfill
-    BOOL disableXHRPolyfill = [settings cordovaBoolSettingForKey:@"DisableXHRPolyfill" defaultValue:NO];
-    if (!disableXHRPolyfill) {
-        NSLog(@"CDVWKWebViewEngine: trying to inject XHR polyfill");
-        WKUserScript *wkScript = [self wkPluginScript];
+    NSLog(@"CDVWKWebViewEngine: trying to inject XHR polyfill");
+    WKUserScript *wkScript = [self wkPluginScript];
+    if (wkScript) {
+        [userContentController addUserScript:wkScript];
+    }
+
+    BOOL autoCordova = [settings cordovaBoolSettingForKey:@"AutoInjectCordova" defaultValue:NO];
+    if (autoCordova) {
+        NSLog(@"CDVWKWebViewEngine: trying to auto inject cordova");
+        WKUserScript *cordovaScript = [self autoCordovify];
         if (wkScript) {
-            [userContentController addUserScript:wkScript];
+            [userContentController addUserScript:cordovaScript];
         }
-    } else {
-        NSLog(@"CDVWKWebViewEngine: skipped XHR polyfill");
     }
 
     WKWebViewConfiguration* configuration = [self createConfigurationFromSettings:settings];
@@ -374,6 +378,25 @@ static void * KVOContext = &KVOContext;
                                   injectionTime:WKUserScriptInjectionTimeAtDocumentStart
                                forMainFrameOnly:YES];
 }
+
+- (WKUserScript*)autoCordovify
+{
+    NSString *scriptFile = [[NSBundle mainBundle] pathForResource:@"www/cordova" ofType:@"js"];
+    if (scriptFile == nil) {
+        NSLog(@"CDVWKWebViewEngine: cordova.js WAS NOT FOUND");
+        return nil;
+    }
+    NSError *error = nil;
+    NSString *source = [NSString stringWithContentsOfFile:scriptFile encoding:NSUTF8StringEncoding error:&error];
+    if (source == nil || error != nil) {
+        NSLog(@"CDVWKWebViewEngine: cordova.js can not be loaded: %@", error);
+        return nil;
+    }
+    return [[WKUserScript alloc] initWithSource:source
+                                  injectionTime:WKUserScriptInjectionTimeAtDocumentStart
+                               forMainFrameOnly:YES];
+}
+
 
 #pragma mark WKScriptMessageHandler implementation
 
