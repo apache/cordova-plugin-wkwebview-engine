@@ -33,7 +33,7 @@
   var originalOpen = xhrPrototype.open;
 
   xhrPrototype.open = function _wk_open(method, url) {
-    arguments[1] = wkRewriteURL(url);
+    arguments[1] = normalizeURL(url);
     originalOpen.apply(this, arguments);
   }
   console.debug("XHR polyfill injected!");
