@@ -6,6 +6,8 @@
   }
   // Initialize Ionic
   window.Ionic = window.Ionic || {};
+  window.Ionic.cordovaPath = undefined; // DO NOT MODIFY THIS LINE!!!!!
+
 
   function normalizeURL(url) {
     if (!url) {
@@ -14,7 +16,7 @@
     if (!url.startsWith("file://")) {
       return url;
     }
-    url = url.substr(7); // len("file://) == 7
+    url = url.substr(7); // len("file://") == 7
     if (url.length == 0 || url[0] !== '/') { // ensure the new URL starts with /
       url = '/' + url;
     }
