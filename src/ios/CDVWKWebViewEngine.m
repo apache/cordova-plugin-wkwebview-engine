@@ -105,13 +105,21 @@
     [userContentController addScriptMessageHandler:weakScriptMessageHandler name:CDV_IONIC_STOP_SCROLL];
 
     // Inject XHR Polyfill
-    BOOL autoCordova = [settings cordovaBoolSettingForKey:@"AutoInjectCordova" defaultValue:NO];
-
     NSLog(@"CDVWKWebViewEngine: trying to inject XHR polyfill");
-    WKUserScript *wkScript = [self wkPluginScript: autoCordova];
+    WKUserScript *wkScript = [self wkPluginScript];
     if (wkScript) {
         [userContentController addUserScript:wkScript];
     }
+
+    BOOL autoCordova = [settings cordovaBoolSettingForKey:@"AutoInjectCordova" defaultValue:NO];
+    if(autoCordova){
+        NSLog(@"CDVWKWebViewEngine: trying to inject XHR polyfill");
+        WKUserScript *cordova = [self autoCordovify];
+        if (cordova) {
+            [userContentController addUserScript:cordova];
+        }
+    }
+
 
     WKWebViewConfiguration* configuration = [self createConfigurationFromSettings:settings];
     configuration.userContentController = userContentController;
@@ -355,7 +363,7 @@ static void * KVOContext = &KVOContext;
     return self.engineWebView;
 }
 
-- (WKUserScript*)wkPluginScript:(BOOL)autoCordova
+- (WKUserScript*)wkPluginScript
 {
     NSString *scriptFile = [[NSBundle mainBundle] pathForResource:@"www/wk-plugin" ofType:@"js"];
     if (scriptFile == nil) {
@@ -368,16 +376,30 @@ static void * KVOContext = &KVOContext;
         NSLog(@"CDVWKWebViewEngine: WK plugin can not be loaded: %@", error);
         return nil;
     }
-    if(autoCordova) {
-        NSURL *cordovaURL = [[NSBundle mainBundle] URLForResource:@"www/cordova" withExtension:@"js"];
-        if(cordovaURL) {
-            NSLog(@"CDVWKWebViewEngine: auto injecting cordova");
-            NSString *cordovaPath = [CDV_LOCAL_SERVER stringByAppendingString:cordovaURL.path];
-            NSString *replacement = [NSString stringWithFormat:@"window.Ionic.cordovaPath = '%@'", cordovaPath];
-            source = [source stringByReplacingOccurrencesOfString:@"window.Ionic.cordovaPath = undefined" withString:replacement];
-        }
 
+    return [[WKUserScript alloc] initWithSource:source
+                                  injectionTime:WKUserScriptInjectionTimeAtDocumentStart
+                               forMainFrameOnly:YES];
+}
+
+- (WKUserScript*)autoCordovify
+{
+    NSURL *cordovaURL = [[NSBundle mainBundle] URLForResource:@"www/cordova" withExtension:@"js"];
+    if (cordovaURL == nil) {
+        NSLog(@"CDVWKWebViewEngine: cordova.js WAS NOT FOUND");
+        return nil;
     }
+    NSError *error = nil;
+    NSString *source = [NSString stringWithContentsOfURL:cordovaURL encoding:NSUTF8StringEncoding error:&error];
+    if (source == nil || error != nil) {
+        NSLog(@"CDVWKWebViewEngine: cordova.js can not be loaded: %@", error);
+        return nil;
+    }
+    NSLog(@"CDVWKWebViewEngine: auto injecting cordova");
+    NSString *cordovaPath = [CDV_LOCAL_SERVER stringByAppendingString:cordovaURL.URLByDeletingLastPathComponent.path];
+    NSString *replacement = [NSString stringWithFormat:@"var pathPrefix = '%@/';", cordovaPath];
+    source = [source stringByReplacingOccurrencesOfString:@"var pathPrefix = findCordovaPath();" withString:replacement];
+
     return [[WKUserScript alloc] initWithSource:source
                                   injectionTime:WKUserScriptInjectionTimeAtDocumentStart
                                forMainFrameOnly:YES];

@@ -4,10 +4,9 @@
   if (!window.webkit || !window.webkit.messageHandlers) {
     return;
   }
+
   // Initialize Ionic
   window.Ionic = window.Ionic || {};
-  window.Ionic.cordovaPath = undefined; // DO NOT MODIFY THIS LINE!!!!!
-
 
   function normalizeURL(url) {
     if (!url) {
