@@ -39,28 +39,28 @@ npm install cordova -g
 Ensure the `ios` platform has been added:
 
 ```
-ionic platform ls
+ionic cordova platform ls
 ```
 
 If the iOS platform is not listed, run the following command:
 
 ```
-ionic platform add ios
+ionic cordova platform add ios
 ```
 
 If the iOS platform is installed but the version is < `4.x`, run the following commands:
 
 ```
-ionic platform update ios
-ionic plugin save           # creates backup of existing plugins
+ionic cordova platform update ios
+ionic cordova plugin save           # creates backup of existing plugins
 rm -rf ./plugins            # delete plugins directory
-ionic prepare               # re-install plugins compatible with cordova-ios 4.x
+ionic cordova prepare               # re-install plugins compatible with cordova-ios 4.x
 ```
 
 Install the WKWebViewPlugin:
 
 ```
-ionic plugin add https://github.com/driftyco/cordova-plugin-wkwebview-engine.git --save
+ionic cordova plugin add https://github.com/driftyco/cordova-plugin-wkwebview-engine.git --save
 ```
 
 **Note:** 
@@ -68,20 +68,20 @@ ionic plugin add https://github.com/driftyco/cordova-plugin-wkwebview-engine.git
 If you already had [apache/cordova-plugin-wkwebview-engine](https://github.com/apache/cordova-plugin-wkwebview-engine) install make sure that is removed before using this version.
 
 ```
-ionic plugin rm cordova-plugin-wkwebview-engine
+ionic cordova plugin rm cordova-plugin-wkwebview-engine
 ```
 
 
 Build the platform:
 
 ```
-ionic prepare
+ionic cordova prepare
 ```
 
 Test the app on an iOS 9 or 10 device:
 
 ```
-ionic run ios
+ionic cordova run ios
 ```
 
 An easy way to verify that WKWebView has been installed on iOS is to check if `window.indexedDB` exists.  For example:
