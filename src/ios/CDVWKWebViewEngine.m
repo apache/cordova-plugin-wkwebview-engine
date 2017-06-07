@@ -28,7 +28,6 @@
 #define CDV_LOCAL_SERVER @"http://localhost:8080"
 #define CDV_BRIDGE_NAME @"cordova"
 #define CDV_IONIC_STOP_SCROLL @"stopScroll"
-#define CDV_WKWEBVIEW_FILE_URL_LOAD_SELECTOR @"loadFileURL:allowingReadAccessToURL:"
 
 
 @interface CDVWKWeakScriptMessageHandler : NSObject <WKScriptMessageHandler>
@@ -42,11 +41,11 @@
 
 @interface CDVWKWebViewEngine ()
 
-@property (nonatomic, strong, readwrite) NSOperationQueue* fileQueue;
 @property (nonatomic, strong, readwrite) UIView* engineWebView;
 @property (nonatomic, strong, readwrite) id <WKUIDelegate> uiDelegate;
 @property (nonatomic, weak) id <WKScriptMessageHandler> weakScriptMessageHandler;
 @property (nonatomic, strong) GCDWebServer *webServer;
+@property (nonatomic, readwrite) CGRect frame;
 
 @end
 
@@ -64,10 +63,7 @@
         if (NSClassFromString(@"WKWebView") == nil) {
             return nil;
         }
-
-        self.engineWebView = [[WKWebView alloc] initWithFrame:frame];
-        self.fileQueue = [[NSOperationQueue alloc] init];
-
+        self.frame = frame;
         self.webServer = [[GCDWebServer alloc] init];
         [self.webServer addGETHandlerForBasePath:@"/" directoryPath:@"/" indexFilename:nil cacheAge:3600 allowRangeRequests:YES];
         [self.webServer startWithPort:8080 bonjourName:nil];
@@ -111,6 +107,11 @@
         [userContentController addUserScript:wkScript];
     }
 
+    WKUserScript *configScript = [self configScript];
+    if (configScript) {
+        [userContentController addUserScript:configScript];
+    }
+
     BOOL autoCordova = [settings cordovaBoolSettingForKey:@"AutoInjectCordova" defaultValue:NO];
     if(autoCordova){
         NSLog(@"CDVWKWebViewEngine: trying to inject XHR polyfill");
@@ -125,7 +126,7 @@
     configuration.userContentController = userContentController;
 
     // re-create WKWebView, since we need to update configuration
-    WKWebView* wkWebView = [[WKWebView alloc] initWithFrame:self.engineWebView.frame configuration:configuration];
+    WKWebView* wkWebView = [[WKWebView alloc] initWithFrame:self.frame configuration:configuration];
     wkWebView.UIDelegate = self.uiDelegate;
     self.engineWebView = wkWebView;
 
@@ -218,35 +219,17 @@ static void * KVOContext = &KVOContext;
 
 - (id)loadRequest:(NSURLRequest*)request
 {
-    if ([self canLoadRequest:request]) { // can load, differentiate between file urls and other schemes
-        if (request.URL.fileURL) {
-
-            NSURL *url = [[NSURL URLWithString:CDV_LOCAL_SERVER] URLByAppendingPathComponent:request.URL.path];
-            if(request.URL.query) {
-                url = [NSURL URLWithString:[@"?" stringByAppendingString:request.URL.query] relativeToURL:url];
-            }
-            if(request.URL.fragment) {
-                url = [NSURL URLWithString:[@"#" stringByAppendingString:request.URL.fragment] relativeToURL:url];
-            }
-            NSURLRequest *request2 = [NSURLRequest requestWithURL:url];
-            return [(WKWebView*)_engineWebView loadRequest:request2];
-        } else {
-            return [(WKWebView*)_engineWebView loadRequest:request];
+    if (request.URL.fileURL) {
+        NSURL *url = [[NSURL URLWithString:CDV_LOCAL_SERVER] URLByAppendingPathComponent:request.URL.path];
+        if(request.URL.query) {
+            url = [NSURL URLWithString:[@"?" stringByAppendingString:request.URL.query] relativeToURL:url];
         }
-    } else { // can't load, print out error
-        NSString* errorHtml = [NSString stringWithFormat:
-                               @"<!doctype html>"
-                               @"<title>Error</title>"
-                               @"<div style='font-size:2em'>"
-                               @"   <p>The WebView engine '%@' is unable to load the request: %@</p>"
-                               @"   <p>Most likely the cause of the error is that the loading of file urls is not supported in iOS %@.</p>"
-                               @"</div>",
-                               NSStringFromClass([self class]),
-                               [request.URL description],
-                               [[UIDevice currentDevice] systemVersion]
-                               ];
-        return [self loadHTMLString:errorHtml baseURL:nil];
+        if(request.URL.fragment) {
+            url = [NSURL URLWithString:[@"#" stringByAppendingString:request.URL.fragment] relativeToURL:url];
+        }
+        request = [NSURLRequest requestWithURL:url];
     }
+    return [(WKWebView*)_engineWebView loadRequest:request];
 }
 
 - (id)loadHTMLString:(NSString*)string baseURL:(NSURL*)baseURL
@@ -259,17 +242,9 @@ static void * KVOContext = &KVOContext;
     return [(WKWebView*)_engineWebView URL];
 }
 
-- (BOOL) canLoadRequest:(NSURLRequest*)request
+- (BOOL)canLoadRequest:(NSURLRequest *)request
 {
-    // See: https://issues.apache.org/jira/browse/CB-9636
-    SEL wk_sel = NSSelectorFromString(CDV_WKWEBVIEW_FILE_URL_LOAD_SELECTOR);
-
-    // if it's a file URL, check whether WKWebView has the selector (which is in iOS 9 and up only)
-    if (request.URL.fileURL) {
-        return [_engineWebView respondsToSelector:wk_sel];
-    } else {
-        return YES;
-    }
+    return TRUE;
 }
 
 - (void)updateSettings:(NSDictionary*)settings
@@ -376,6 +351,26 @@ static void * KVOContext = &KVOContext;
         NSLog(@"CDVWKWebViewEngine: WK plugin can not be loaded: %@", error);
         return nil;
     }
+
+    return [[WKUserScript alloc] initWithSource:source
+                                  injectionTime:WKUserScriptInjectionTimeAtDocumentStart
+                               forMainFrameOnly:YES];
+}
+
+- (WKUserScript*)configScript
+{
+    Class keyboard = NSClassFromString(@"CDVIonicKeyboard");
+    BOOL keyboardPlugin = keyboard != nil;
+    if(!keyboardPlugin) {
+        return nil;
+    }
+
+    BOOL keyboardResizes = [self.commandDelegate.settings cordovaBoolSettingForKey:@"KeyboardResizes" defaultValue:YES];
+    NSString *source = [NSString stringWithFormat:
+                        @"window.Ionic = window.Ionic || {};"
+                        @"window.Ionic.keyboardPlugin=true;"
+                        @"window.Ionic.keyboardResizes=%@",
+                        keyboardResizes ? @"true" : @"false"];
 
     return [[WKUserScript alloc] initWithSource:source
                                   injectionTime:WKUserScriptInjectionTimeAtDocumentStart
@@ -565,7 +560,7 @@ static void * KVOContext = &KVOContext;
 
     if (shouldAllowRequest) {
         NSString *scheme = url.scheme;
-        if ([scheme isEqualToString:@"tel"] || 
+        if ([scheme isEqualToString:@"tel"] ||
             [scheme isEqualToString:@"mailto"] ||
             [scheme isEqualToString:@"facetime"] ||
             [scheme isEqualToString:@"sms"] ||
