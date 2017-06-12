@@ -127,8 +127,6 @@
 
     // re-create WKWebView, since we need to update configuration
     WKWebView* wkWebView = [[WKWebView alloc] initWithFrame:self.frame configuration:configuration];
-    wkWebView.allowsLinkPreview = [settings cordovaBoolSettingForKey:@"AllowLinkPreview" defaultValue:NO];
-    wkWebView.allowsBackForwardNavigationGestures = NO;
     wkWebView.UIDelegate = self.uiDelegate;
     self.engineWebView = wkWebView;
 
@@ -254,42 +252,8 @@ static void * KVOContext = &KVOContext;
     WKWebView* wkWebView = (WKWebView*)_engineWebView;
 
     wkWebView.configuration.preferences.minimumFontSize = [settings cordovaFloatSettingForKey:@"MinimumFontSize" defaultValue:0.0];
-
-    /*
-     wkWebView.configuration.preferences.javaScriptEnabled = [settings cordovaBoolSettingForKey:@"JavaScriptEnabled" default:YES];
-     wkWebView.configuration.preferences.javaScriptCanOpenWindowsAutomatically = [settings cordovaBoolSettingForKey:@"JavaScriptCanOpenWindowsAutomatically" default:NO];
-     */
-
-    // By default, DisallowOverscroll is false (thus bounce is allowed)
-    BOOL bounceAllowed = !([settings cordovaBoolSettingForKey:@"DisallowOverscroll" defaultValue:NO]);
-
-    // prevent webView from bouncing
-    if (!bounceAllowed) {
-        if ([wkWebView respondsToSelector:@selector(scrollView)]) {
-            ((UIScrollView*)[wkWebView scrollView]).bounces = NO;
-        } else {
-            for (id subview in wkWebView.subviews) {
-                if ([[subview class] isSubclassOfClass:[UIScrollView class]]) {
-                    ((UIScrollView*)subview).bounces = NO;
-                }
-            }
-        }
-    }
-
-    wkWebView.scrollView.scrollEnabled = [settings cordovaFloatSettingForKey:@"ScrollEnabled" defaultValue:YES];
-
-    NSString* decelerationSetting = [settings cordovaSettingForKey:@"WKWebViewDecelerationSpeed"];
-    if (!decelerationSetting) {
-        // Fallback to the UIWebView-named preference
-        decelerationSetting = [settings cordovaSettingForKey:@"UIWebViewDecelerationSpeed"];
-    }
-
-    if (![@"fast" isEqualToString:decelerationSetting]) {
-        [wkWebView.scrollView setDecelerationRate:UIScrollViewDecelerationRateNormal];
-    } else {
-        [wkWebView.scrollView setDecelerationRate:UIScrollViewDecelerationRateFast];
-    }
-
+    wkWebView.allowsLinkPreview = [settings cordovaBoolSettingForKey:@"AllowLinkPreview" defaultValue:NO];
+    wkWebView.scrollView.scrollEnabled = [settings cordovaFloatSettingForKey:@"ScrollEnabled" defaultValue:NO];
     wkWebView.allowsBackForwardNavigationGestures = [settings cordovaBoolSettingForKey:@"AllowBackForwardNavigationGestures" defaultValue:NO];
 }
 
