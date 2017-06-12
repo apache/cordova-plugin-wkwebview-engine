@@ -1,0 +1,12 @@
+root: true
+extends: semistandard
+plugins:
+  - standard
+  - promise
+rules:
+  indent:
+    - error
+    - 4
+  quotes:
+    - error
+    - single
