@@ -77,7 +77,7 @@ function convertMessageToArgsNativeToJs(message) {
 }
 
 var iOSExec = function() {
-    
+
     // detect change in bridge, if there is a change, we forward to new bridge
 
     // if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.cordova && window.webkit.messageHandlers.cordova.postMessage) {
@@ -124,7 +124,7 @@ var iOSExec = function() {
 };
 
 iOSExec.nativeCallback = function(callbackId, status, message, keepCallback, debug) {
-    
+
     var success = status === 0 || status === 1;
     var args = convertMessageToArgsNativeToJs(message);
     setTimeout(function(){

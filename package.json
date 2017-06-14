@@ -5,10 +5,10 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apache/cordova-plugin-wkwebview-engine"
+    "url": "https://github.com/ionic-team/cordova-plugin-wkwebview-engine"
   },
   "bugs": {
-    "url": "https://issues.apache.org/jira/browse/CB"
+    "url": "https://github.com/ionic-team/cordova-plugin-wkwebview-engine/issues"
   },
   "keywords": [
     "cordova",
