@@ -99,6 +99,13 @@ In order to allow swiping backwards and forwards in browser history like Safari 
 <preference name="AllowBackForwardNavigationGestures" value="true" />
 ```
 
+You can also set this preference dynamically from JavaScript:
+
+```js
+window.WkWebView.allowsBackForwardNavigationGestures(true)
+window.WkWebView.allowsBackForwardNavigationGestures(false)
+```
+
 Limitations
 --------
 
