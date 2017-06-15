@@ -1,3 +1,13 @@
+# Cordova WKWebView Engine FORK
+
+This fork has two new features.
+
+1. It honors the `<preference name="KeyboardDisplayRequiresUserAction" value="false" />` preference.
+
+2. You can dynamically set `window.WkWebKit.allowsBackForwardNavigationGestures(true or false)`.
+
+---
+
 <!--
 # license: Licensed to the Apache Software Foundation (ASF) under one
 #         or more contributor license agreements.  See the NOTICE file
