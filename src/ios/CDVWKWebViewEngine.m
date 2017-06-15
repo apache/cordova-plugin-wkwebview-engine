@@ -457,6 +457,19 @@ static void * KVOContext = &KVOContext;
     return decisionHandler(NO);
 }
 
+#pragma mark - Plugin interface
+
+- (void)allowsBackForwardNavigationGestures:(CDVInvokedUrlCommand*)command;
+{
+  id value = [command.arguments objectAtIndex:0];
+  if (!([value isKindOfClass:[NSNumber class]])) {
+    value = [NSNumber numberWithBool:NO];
+  }
+
+  WKWebView* wkWebView = (WKWebView*)_engineWebView;
+  wkWebView.allowsBackForwardNavigationGestures = [value boolValue];
+}
+
 @end
 
 #pragma mark - CDVWKWeakScriptMessageHandler
@@ -478,16 +491,3 @@ static void * KVOContext = &KVOContext;
 }
 
 @end
-
-#pragma mark - Plugin interface
-
-- (void)allowsBackForwardNavigationGestures:(CDVInvokedUrlCommand*)command;
-{
-  id value = [command.arguments objectAtIndex:0];
-  if (!([value isKindOfClass:[NSNumber class]])) {
-    value = [NSNumber numberWithBool:NO];
-  }
-
-  WKWebView* wkWebView = (WKWebView*)_engineWebView;
-  wkWebView.allowsBackForwardNavigationGestures = [value boolValue];
-}
