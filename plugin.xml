@@ -41,6 +41,10 @@
             <clobbers target="cordova.exec" />
         </js-module>
 
+        <js-module src="src/www/ios/ios-wkwebview.js" name="ios-wkwebview">
+            <clobbers target="window.WkWebView" />
+        </js-module>
+
         <config-file target="config.xml" parent="/*">
             <feature name="CDVWKWebViewEngine">
                 <param name="ios-package" value="CDVWKWebViewEngine" />

@@ -175,9 +175,3 @@ if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandl
       module.exports = execProxy;
    });
 }
-
-window.WkWebKit = {
-  allowsBackForwardNavigationGestures: function(allow) {
-    exec(null, null, "CDVWKWebViewEngine", "allowsBackForwardNavigationGestures", [allow]);
-  }
-}
