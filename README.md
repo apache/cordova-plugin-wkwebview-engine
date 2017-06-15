@@ -1,3 +1,13 @@
+# Cordova WKWebView Engine FORK
+
+This fork has two new features.
+
+1. It honors the `<preference name="KeyboardDisplayRequiresUserAction" value="false" />` preference.
+
+2. You can dynamically set `window.WkWebKit.allowsBackForwardNavigationGestures(true or false)`.
+
+---
+
 <!--
 # license: Licensed to the Apache Software Foundation (ASF) under one
 #         or more contributor license agreements.  See the NOTICE file
@@ -87,6 +97,13 @@ In order to allow swiping backwards and forwards in browser history like Safari 
 
 ```xml
 <preference name="AllowBackForwardNavigationGestures" value="true" />
+```
+
+You can also set this preference dynamically from JavaScript:
+
+```js
+window.WkWebView.allowsBackForwardNavigationGestures(true)
+window.WkWebView.allowsBackForwardNavigationGestures(false)
 ```
 
 Limitations

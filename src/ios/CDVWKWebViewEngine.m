@@ -17,6 +17,7 @@
  under the License.
  */
 
+#import <objc/runtime.h>
 #import "CDVWKWebViewEngine.h"
 #import "CDVWKWebViewUIDelegate.h"
 #import "CDVWKProcessPoolFactory.h"
@@ -118,6 +119,10 @@
         [wkWebView.configuration.userContentController addScriptMessageHandler:(id < WKScriptMessageHandler >)self.viewController name:CDV_BRIDGE_NAME];
     }
 
+    if (![settings cordovaBoolSettingForKey:@"KeyboardDisplayRequiresUserAction" defaultValue:YES]) {
+        [self keyboardDisplayDoesNotRequireUserAction];
+    }
+
     [self updateSettings:settings];
 
     // check if content thread has died on resume
@@ -130,6 +135,18 @@
     NSLog(@"Using WKWebView");
 
     [self addURLObserver];
+}
+
+// https://github.com/Telerik-Verified-Plugins/WKWebView/commit/04e8296adeb61f289f9c698045c19b62d080c7e3
+- (void) keyboardDisplayDoesNotRequireUserAction {
+    SEL sel = sel_getUid("_startAssistingNode:userIsInteracting:blurPreviousNode:userObject:");
+    Class WKContentView = NSClassFromString(@"WKContentView");
+    Method method = class_getInstanceMethod(WKContentView, sel);
+    IMP originalImp = method_getImplementation(method);
+    IMP imp = imp_implementationWithBlock(^void(id me, void* arg0, BOOL arg1, BOOL arg2, id arg3) {
+        ((void (*)(id, SEL, void*, BOOL, BOOL, id))originalImp)(me, sel, arg0, TRUE, arg2, arg3);
+    });
+    method_setImplementation(method, imp);
 }
 
 - (void)onReset {
@@ -455,6 +472,19 @@ static void * KVOContext = &KVOContext;
     }
 
     return decisionHandler(NO);
+}
+
+#pragma mark - Plugin interface
+
+- (void)allowsBackForwardNavigationGestures:(CDVInvokedUrlCommand*)command;
+{
+  id value = [command.arguments objectAtIndex:0];
+  if (!([value isKindOfClass:[NSNumber class]])) {
+    value = [NSNumber numberWithBool:NO];
+  }
+
+  WKWebView* wkWebView = (WKWebView*)_engineWebView;
+  wkWebView.allowsBackForwardNavigationGestures = [value boolValue];
 }
 
 @end
