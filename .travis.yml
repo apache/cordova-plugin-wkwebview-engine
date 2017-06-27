@@ -1,14 +1,36 @@
-osx_image: xcode8
-language: objective-c
 sudo: false
+addons:
+  jwt:
+    secure: rjC2avwYWiw+oTHleXcJPlehTA2j0jRZj+UJHq7fRCJRYIsraKy2j9q3fOSjWR7MEvf+/hUwhmf4gFk2zrDukbc0x3rMdt47BwNtbpCTN05KbHebl5AH0xx0ZPkJ5N0tJqG2t4Bl9wqNRINOMES77Souduh4udQdtGfA9IBmhb0FPNHmW0J++essbNjd5b5MgitqgTi30x7Tvf9QYMmsTKpN8pdfbE29dgqiY/HTKbxyOU+X2Ed5mcMi/bGhSGU78JU3u91S0VA+w+bmNZIU4VeXEFbDkjIboPR41aIbsfHrk/41+k6BAcOurKJ1TxBNEVxL8ouZfAuPDWhJVABxdbtYAiem309nuUJ0fR05qtX9AO1mmMh+0xByyme2xjSjTvt6bzZLNm2EdS6dO5FmG8aBVX4JJCHkTM5wrA5MgRFbEcgfv5jp3ynvY7dNasfaOLFa+IxZ5qzPdzkXnTEwvwe7ioo5phMGbpefFrimDl/vy1QJdTTCUcvaXkqumQdJwaySYDq3Nsns10yDPEATI1NtZGHLbUM+W+ZOaoTZRKwRelLHF5oyOQnyIu2HzBfJS7pHlIbQaxtigWHuSWuee+sfmTPjj40y4uUqQAEDxmawKb6Y6xqQr+QpvI9pvpzeZYHdApNBe6mPDVh4hwgjlFhE3/iusnU+aeZHIUJEmME=
+env:
+  global:
+  - SAUCE_USERNAME=snay
+  - TRAVIS_NODE_VERSION="4.2"
+matrix:
+  include:
+  - env: PLATFORM=ios-9.3
+    os: osx
+    osx_image: xcode8
+    language: objective-c
+  - env: PLATFORM=ios-10.0
+    os: osx
+    osx_image: xcode8
+    language: objective-c
 before_install:
-    - rvm get head
-    - npm cache clean -f
-    - npm install -g n
-    - n stable
-    - node --version
-    - xcodebuild -version
+- rvm get head
+- npm cache clean -f
+- rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
+  && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
+  install $TRAVIS_NODE_VERSION
+- node --version
+- xcodebuild -version
+- npm install -g ios-deploy
+- git clone https://github.com/apache/cordova-paramedic /tmp/paramedic && pushd /tmp/paramedic
+  && npm install && popd
+- npm install -g cordova
 install:
-    - npm install
+- npm install
 script:
-    - npm test
+- npm test
+- node /tmp/paramedic/main.js --config pr/$PLATFORM --plugin $(pwd) --shouldUseSauce
+  --buildName travis-plugin-wkwebview-engine-$TRAVIS_JOB_NUMBER
