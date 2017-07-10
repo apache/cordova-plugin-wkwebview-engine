@@ -23,7 +23,6 @@ matrix:
     android:
       components:
       - tools
-      - tools
 before_install:
 - rvm get head
 - npm cache clean -f
