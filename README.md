@@ -24,7 +24,7 @@
 Cordova WKWebView Engine
 ======
 
-This plugin makes `Cordova` use the `WKWebView` component instead of the default `UIWebView` component, and is installable only on a system with the iOS 9.0 SDK. 
+This plugin makes `Cordova` use the `WKWebView` component instead of the default `UIWebView` component, and is installable only on a system with the iOS 9.0 SDK.
 
 In iOS 9, Apple has fixed the [issue](http://www.openradar.me/18039024) present through iOS 8 where you cannot load locale files using file://, and must resort to using a local webserver. **However, you are still not able to use XHR from the file:// protocol without [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS) enabled on your server.**
 
@@ -76,7 +76,7 @@ We have an [experimental plugin](https://github.com/apache/cordova-plugins/tree/
 Application Transport Security (ATS) in iOS 9
 -----------
 
-Starting with [cordova-cli 5.4.0](https://www.npmjs.com/package/cordova), it will support automatic conversion of the [&lt;access&gt;](http://cordova.apache.org/docs/en/edge/guide/appdev/whitelist/index.html) tags in config.xml to Application Transport Security [ATS](https://developer.apple.com/library/prerelease/ios/documentation/General/Reference/InfoPlistKeyReference/Articles/CocoaKeys.html#//apple_ref/doc/uid/TP40009251-SW33) directives. 
+Starting with [cordova-cli 5.4.0](https://www.npmjs.com/package/cordova), it will support automatic conversion of the [&lt;access&gt;](http://cordova.apache.org/docs/en/edge/guide/appdev/whitelist/index.html) tags in config.xml to Application Transport Security [ATS](https://developer.apple.com/library/prerelease/ios/documentation/General/Reference/InfoPlistKeyReference/Articles/CocoaKeys.html#//apple_ref/doc/uid/TP40009251-SW33) directives.
 
 Upgrade to at least version 5.4.0 of the cordova-cli to use this new functionality.
 
@@ -89,6 +89,13 @@ In order to allow swiping backwards and forwards in browser history like Safari 
 <preference name="AllowBackForwardNavigationGestures" value="true" />
 ```
 
+You can also set this preference dynamically from JavaScript:
+
+```js
+window.WkWebView.allowsBackForwardNavigationGestures(true)
+window.WkWebView.allowsBackForwardNavigationGestures(false)
+```
+
 Limitations
 --------
 
@@ -97,7 +104,7 @@ If you are upgrading from UIWebView, please note the limitations of using WKWebV
 Apple Issues
 -------
 
-The `AllowInlineMediaPlayback` preference will not work because of this [Apple bug](http://openradar.appspot.com/radar?id=6673091526656000). This bug [has been fixed](https://issues.apache.org/jira/browse/CB-11452) in [iOS 10](https://twitter.com/shazron/status/745546355796389889). 
+The `AllowInlineMediaPlayback` preference will not work because of this [Apple bug](http://openradar.appspot.com/radar?id=6673091526656000). This bug [has been fixed](https://issues.apache.org/jira/browse/CB-11452) in [iOS 10](https://twitter.com/shazron/status/745546355796389889).
 
 
 

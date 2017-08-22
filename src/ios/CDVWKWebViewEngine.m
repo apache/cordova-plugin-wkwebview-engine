@@ -173,16 +173,16 @@ static void * KVOContext = &KVOContext;
 {
     BOOL title_is_nil = (title == nil);
     BOOL location_is_blank = [[location absoluteString] isEqualToString:@"about:blank"];
-    
+
     BOOL reload = (title_is_nil || location_is_blank);
-    
+
 #ifdef DEBUG
     NSLog(@"%@", @"CDVWKWebViewEngine shouldReloadWebView::");
     NSLog(@"CDVWKWebViewEngine shouldReloadWebView title: %@", title);
     NSLog(@"CDVWKWebViewEngine shouldReloadWebView location: %@", [location absoluteString]);
     NSLog(@"CDVWKWebViewEngine shouldReloadWebView reload: %u", reload);
 #endif
-    
+
     return reload;
 }
 
@@ -455,6 +455,19 @@ static void * KVOContext = &KVOContext;
     }
 
     return decisionHandler(NO);
+}
+
+#pragma mark - Plugin interface
+
+- (void)allowsBackForwardNavigationGestures:(CDVInvokedUrlCommand*)command;
+{
+    id value = [command.arguments objectAtIndex:0];
+    if (!([value isKindOfClass:[NSNumber class]])) {
+        value = [NSNumber numberWithBool:NO];
+    }
+
+    WKWebView* wkWebView = (WKWebView*)_engineWebView;
+    wkWebView.allowsBackForwardNavigationGestures = [value boolValue];
 }
 
 @end
