@@ -23,17 +23,17 @@
  * Creates the exec bridge used to notify the native code of
  * commands.
  */
-var cordova = require('cordova'),
-    utils = require('cordova/utils'),
-    base64 = require('cordova/base64');
+var cordova = require('cordova');
+var utils = require('cordova/utils');
+var base64 = require('cordova/base64');
 
-function massageArgsJsToNative(args) {
-    if (!args || utils.typeName(args) != 'Array') {
+function massageArgsJsToNative (args) {
+    if (!args || utils.typeName(args) !== 'Array') {
         return args;
     }
     var ret = [];
-    args.forEach(function(arg, i) {
-        if (utils.typeName(arg) == 'ArrayBuffer') {
+    args.forEach(function (arg, i) {
+        if (utils.typeName(arg) === 'ArrayBuffer') {
             ret.push({
                 'CDVType': 'ArrayBuffer',
                 'data': base64.fromArrayBuffer(arg)
@@ -45,29 +45,29 @@ function massageArgsJsToNative(args) {
     return ret;
 }
 
-function massageMessageNativeToJs(message) {
-    if (message.CDVType == 'ArrayBuffer') {
-        var stringToArrayBuffer = function(str) {
+function massageMessageNativeToJs (message) {
+    if (message.CDVType === 'ArrayBuffer') {
+        var stringToArrayBuffer = function (str) {
             var ret = new Uint8Array(str.length);
             for (var i = 0; i < str.length; i++) {
                 ret[i] = str.charCodeAt(i);
             }
             return ret.buffer;
         };
-        var base64ToArrayBuffer = function(b64) {
-            return stringToArrayBuffer(atob(b64));
+        var base64ToArrayBuffer = function (b64) {
+            return stringToArrayBuffer(atob(b64)); // eslint-disable-line no-undef
         };
         message = base64ToArrayBuffer(message.data);
     }
     return message;
 }
 
-function convertMessageToArgsNativeToJs(message) {
+function convertMessageToArgsNativeToJs (message) {
     var args = [];
     if (!message || !message.hasOwnProperty('CDVType')) {
         args.push(message);
-    } else if (message.CDVType == 'MultiPart') {
-        message.messages.forEach(function(e) {
+    } else if (message.CDVType === 'MultiPart') {
+        message.messages.forEach(function (e) {
             args.push(massageMessageNativeToJs(e));
         });
     } else {
@@ -76,8 +76,7 @@ function convertMessageToArgsNativeToJs(message) {
     return args;
 }
 
-var iOSExec = function() {
-    
+var iOSExec = function () {
     // detect change in bridge, if there is a change, we forward to new bridge
 
     // if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.cordova && window.webkit.messageHandlers.cordova.postMessage) {
@@ -86,7 +85,7 @@ var iOSExec = function() {
 
     var successCallback, failCallback, service, action, actionArgs;
     var callbackId = null;
-    if (typeof arguments[0] !== "string") {
+    if (typeof arguments[0] !== 'string') {
         // FORMAT ONE
         successCallback = arguments[0];
         failCallback = arguments[1];
@@ -100,7 +99,7 @@ var iOSExec = function() {
         // an invalid callbackId and passes it even if no callbacks were given.
         callbackId = 'INVALID';
     } else {
-   	    throw new Error('The old format of this exec call has been removed (deprecated since 2.1). Change to: ' +
+   	    throw new Error('The old format of this exec call has been removed (deprecated since 2.1). Change to: ' + // eslint-disable-line
             'cordova.exec(null, null, \'Service\', \'action\', [ arg1, arg2 ]);');
     }
 
@@ -112,7 +111,7 @@ var iOSExec = function() {
     if (successCallback || failCallback) {
         callbackId = service + cordova.callbackId++;
         cordova.callbacks[callbackId] =
-            {success:successCallback, fail:failCallback};
+            {success: successCallback, fail: failCallback};
     }
 
     actionArgs = massageArgsJsToNative(actionArgs);
@@ -120,20 +119,18 @@ var iOSExec = function() {
     // CB-10133 DataClone DOM Exception 25 guard (fast function remover)
     var command = [callbackId, service, action, JSON.parse(JSON.stringify(actionArgs))];
     window.webkit.messageHandlers.cordova.postMessage(command);
-
 };
 
-iOSExec.nativeCallback = function(callbackId, status, message, keepCallback, debug) {
-    
+iOSExec.nativeCallback = function (callbackId, status, message, keepCallback, debug) {
     var success = status === 0 || status === 1;
     var args = convertMessageToArgsNativeToJs(message);
-    setTimeout(function(){
-    	cordova.callbackFromNative(callbackId, success, status, args, keepCallback);
+    setTimeout(function () {
+    	cordova.callbackFromNative(callbackId, success, status, args, keepCallback); // eslint-disable-line
     }, 0);
 };
 
 // for backwards compatibility
-iOSExec.nativeEvalAndFetch = function(func) {
+iOSExec.nativeEvalAndFetch = function (func) {
     try {
         func();
     } catch (e) {
@@ -143,35 +140,35 @@ iOSExec.nativeEvalAndFetch = function(func) {
 
 // Proxy the exec for bridge changes. See CB-10106
 
-function cordovaExec() {
+function cordovaExec () {
     var cexec = require('cordova/exec');
     var cexec_valid = (typeof cexec.nativeFetchMessages === 'function') && (typeof cexec.nativeEvalAndFetch === 'function') && (typeof cexec.nativeCallback === 'function');
-    return (cexec_valid && execProxy !== cexec)? cexec : iOSExec;
+    return (cexec_valid && execProxy !== cexec) ? cexec : iOSExec;
 }
 
-function execProxy() {
+function execProxy () {
     cordovaExec().apply(null, arguments);
 }
 
-execProxy.nativeFetchMessages = function() {
+execProxy.nativeFetchMessages = function () {
     return cordovaExec().nativeFetchMessages.apply(null, arguments);
 };
 
-execProxy.nativeEvalAndFetch = function() {
+execProxy.nativeEvalAndFetch = function () {
     return cordovaExec().nativeEvalAndFetch.apply(null, arguments);
 };
 
-execProxy.nativeCallback = function() {
+execProxy.nativeCallback = function () {
     return cordovaExec().nativeCallback.apply(null, arguments);
 };
 
 module.exports = execProxy;
 
 if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.cordova && window.webkit.messageHandlers.cordova.postMessage) {
-   // unregister the old bridge
-   cordova.define.remove('cordova/exec');
-   // redefine bridge to our new bridge
-   cordova.define("cordova/exec", function(require, exports, module) {
-      module.exports = execProxy;
-   });
+    // unregister the old bridge
+    cordova.define.remove('cordova/exec');
+    // redefine bridge to our new bridge
+    cordova.define('cordova/exec', function (require, exports, module) {
+        module.exports = execProxy;
+    });
 }
