@@ -1,6 +1,6 @@
 var exec = require('cordova/exec');
 
-const WkWebKit = {
+var WkWebKit = {
     allowsBackForwardNavigationGestures: function(allow) {
         exec(null, null, "CDVWKWebViewEngine", "allowsBackForwardNavigationGestures", [allow]);
     }
