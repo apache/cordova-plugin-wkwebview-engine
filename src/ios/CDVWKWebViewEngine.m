@@ -461,7 +461,7 @@ static void * KVOContext = &KVOContext;
 
 - (void)allowsBackForwardNavigationGestures:(CDVInvokedUrlCommand*)command;
 {
-    id value = [command.arguments objectAtIndex:0];
+    id value = [command argumentAtIndex:0];
     if (!([value isKindOfClass:[NSNumber class]])) {
         value = [NSNumber numberWithBool:NO];
     }
