@@ -16,13 +16,6 @@ matrix:
     os: osx
     osx_image: xcode8
     language: objective-c
-  - env: PLATFORM=android-7.0 SHOULD_USE_SAUCE=--justBuild
-    os: linux
-    language: android
-    jdk: oraclejdk8
-    android:
-      components:
-      - tools
 before_install:
 - rvm get head
 - npm cache clean -f
@@ -30,11 +23,8 @@ before_install:
   && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
   install $TRAVIS_NODE_VERSION
 - node --version
-- if [[ "$PLATFORM" =~ android ]]; then gradle --version; fi
 - if [[ "$PLATFORM" =~ ios ]]; then xcodebuild -version; fi
 - if [[ "$PLATFORM" =~ ios ]]; then npm install -g ios-deploy; fi
-- if [[ "$PLATFORM" =~ android ]]; then echo y | android update sdk -u --filter android-22,android-23,android-24,android-25;
-  fi
 - git clone https://github.com/apache/cordova-paramedic /tmp/paramedic && pushd /tmp/paramedic
   && npm install && popd
 - npm install -g cordova
