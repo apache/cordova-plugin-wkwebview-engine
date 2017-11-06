@@ -21,6 +21,12 @@
 
 # Release Notes
 
+### 1.1.4 (Nov 06, 2017)
+* added missing license header
+* [CB-13519](https://issues.apache.org/jira/browse/CB-13519) (all): Add 'protective' entry to `cordovaDependencies`
+* [CB-12895](https://issues.apache.org/jira/browse/CB-12895) added `eslint` and removed `jshint`
+* [CB-12847](https://issues.apache.org/jira/browse/CB-12847) fixed `bugs` entry in `package.json`.
+
 ### 1.1.3 (Apr 27, 2017)
 * [CB-12696](https://issues.apache.org/jira/browse/CB-12696) (iOS) Fixing some Xcode warnings
 * [CB-12685](https://issues.apache.org/jira/browse/CB-12685) added `package.json` to tests folder
