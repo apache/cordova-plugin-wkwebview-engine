@@ -107,6 +107,12 @@
     wkWebView.UIDelegate = self.uiDelegate;
     self.engineWebView = wkWebView;
 
+    // This fixes content insets being wrong on iPhone X. Without this, you
+    // must rotate the iPhone X to landscape then vertical to fix insets.
+    if (@available(iOS 11.0, *)) {
+        wkWebView.scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
+    }
+
     if (IsAtLeastiOSVersion(@"9.0") && [self.viewController isKindOfClass:[CDVViewController class]]) {
         wkWebView.customUserAgent = ((CDVViewController*) self.viewController).userAgent;
     }
