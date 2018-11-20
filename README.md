@@ -96,6 +96,15 @@ window.WkWebView.allowsBackForwardNavigationGestures(true)
 window.WkWebView.allowsBackForwardNavigationGestures(false)
 ```
 
+Disabling 3D Touch Link Previews
+-----------
+
+In order to disable preview popups when hard pressing links in iOS, you can set the following preference in your `config.xml`:
+
+```xml
+<preference name="Allow3DTouchLinkPreview" value="false" />
+```
+
 Limitations
 --------
 
