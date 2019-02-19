@@ -124,7 +124,9 @@ var iOSExec = function () {
 iOSExec.nativeCallback = function (callbackId, status, message, keepCallback, debug) {
     var success = status === 0 || status === 1;
     var args = convertMessageToArgsNativeToJs(message);
-    Promise.resolve(cordova.callbackFromNative(callbackId, success, status, args, keepCallback)); // eslint-disable-line
+    Promise.resolve().then(function () {
+        cordova.callbackFromNative(callbackId, success, status, args, keepCallback); // eslint-disable-line
+    });
 };
 
 // for backwards compatibility
