@@ -20,7 +20,11 @@ _ios: &_ios
   osx_image: xcode10.2
 
 matrix:
-  include:    
+  include:
+    # additional `npm test` in directory
+    - env: ADDITIONAL_TESTS_DIR=./tests/ios
+      <<: *_ios
+
     # local tests, without saucelabs
     - env: PLATFORM=local/ios-10.0
       <<: *_ios
