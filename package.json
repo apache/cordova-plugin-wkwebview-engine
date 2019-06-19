@@ -13,7 +13,8 @@
   "keywords": [
     "cordova",
     "wkwebview",
-    "cordova-ios"
+    "cordova-ios",
+    "ecosystem:cordova"
   ],
   "scripts": {
     "test": "npm run eslint && npm run objc-tests",
