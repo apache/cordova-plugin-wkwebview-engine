@@ -29,10 +29,6 @@ matrix:
     - env: ADDITIONAL_TESTS_DIR=./tests/ios
       <<: *_ios
 
-    # local tests, without saucelabs
-    - env: PLATFORM=local/ios-10.0
-      <<: *_ios
-
     # many tests with saucelabs
     - env: PLATFORM=ios-11.3
       <<: *_ios
