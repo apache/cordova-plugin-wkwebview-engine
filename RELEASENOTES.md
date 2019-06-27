@@ -21,6 +21,24 @@
 
 # Release Notes
 
+### 1.2.0 (Jun 27, 2019)
+
+-   build: add `.gitattributes` to force LF (instead of possible CRLF on Windows) ([`797f088`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/797f088))
+-   build: add `.npmignore` to remove unneeded files from npm package ([`2ddcf98`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/2ddcf98))
+-   chore: add CONTRBUTING.md and NOTICE files that were missing ([`a8390a2`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/a8390a2))
+-   chore: fix repo and issue urls and license in package.json and plugin.xml ([`9d7c120`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/9d7c120))
+-   ci(travis): Update Travis CI configuration for new paramedic ([#93](https://github.com/apache/cordova-plugin-wkwebview-engine/issues/93)) ([`3697ee1`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/3697ee1))
+-   chore: add `ecosystem:cordova` to package.json keywords ([`4b14897`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/4b14897))
+-   chore: drop Node.js v4 support ([#91](https://github.com/apache/cordova-plugin-wkwebview-engine/issues/91)) ([`1f1a888`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/1f1a888))
+-   chore: remove leftover .jshintrc ([#90](https://github.com/apache/cordova-plugin-wkwebview-engine/issues/90)) ([`54af786`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/54af786))
+-   fix(ios): Bug fix in recent change in iOSExec.nativeCallback ([#78](https://github.com/apache/cordova-plugin-wkwebview-engine/issues/78)) ([`6f468f4`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/6f468f4))
+-   chore(github): Add or update GitHub pull request and issue template ([`76bca66`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/76bca66))
+-   feat(ios): [GH-68](https://github.com/apache/cordova-plugin-wkwebview-engine/issues/68) (ios): Support for disabling 3D Touch link previews ([#69](https://github.com/apache/cordova-plugin-wkwebview-engine/issues/69)) ([`d0bd80a`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/d0bd80a))
+-   fix(ios): CB-12815: (ios) Fix bug nativeCallback not executed when app is in background ([#49](https://github.com/apache/cordova-plugin-wkwebview-engine/issues/49)) ([`bf0f236`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/bf0f236))
+-   chore: Add cordova-ios in plugin keyword for npm plugin searching ([#47](https://github.com/apache/cordova-plugin-wkwebview-engine/issues/47)) ([`4f8503d`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/4f8503d))
+-   fix(ios): CB-13987: (ios) Fix WKWebView doesn't layout properly at launch on iPhone X ([`7684545`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/7684545), [`81eeade`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/81eeade))
+
+
 ### 1.1.4 (Nov 06, 2017)
 * added missing license header
 * [CB-13519](https://issues.apache.org/jira/browse/CB-13519) (all): Add 'protective' entry to `cordovaDependencies`
