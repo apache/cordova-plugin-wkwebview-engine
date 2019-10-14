@@ -105,6 +105,17 @@ In order to disable preview popups when hard pressing links in iOS, you can set 
 <preference name="Allow3DTouchLinkPreview" value="false" />
 ```
 
+Custom Scheme Handling
+-----------
+
+In order to provide a custom way to load a custom url scheme, you can set the following preference in your `config.xml`:
+
+```xml
+<preference name="CustomURLSchemeHandler" value="{&quot;helloworld&quot;:&quot;MySchemeHandler&quot;}" />
+```
+
+The value is a JSON object that looks something like `{"scheme1": "MySchemeHandler1", "scheme2": "MySchemeHandler2"}`, object key is your scheme, value is your `WKURLSchemeHandler` subclass name. You can define multiple handlers in the object.
+
 Limitations
 --------
 
