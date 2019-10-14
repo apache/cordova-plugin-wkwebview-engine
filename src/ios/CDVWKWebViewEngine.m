@@ -77,6 +77,24 @@
     configuration.mediaPlaybackRequiresUserAction = [settings cordovaBoolSettingForKey:@"MediaPlaybackRequiresUserAction" defaultValue:YES];
     configuration.suppressesIncrementalRendering = [settings cordovaBoolSettingForKey:@"SuppressesIncrementalRendering" defaultValue:NO];
     configuration.mediaPlaybackAllowsAirPlay = [settings cordovaBoolSettingForKey:@"MediaPlaybackAllowsAirPlay" defaultValue:YES];
+    
+    // support custom scheme handling by WKURLSchemeHandler
+    if (IsAtLeastiOSVersion(@"11.0")) {
+        NSString* handlerJsonString = [settings cordovaSettingForKey:@"CustomURLSchemeHandler"];
+        if (handlerJsonString != nil) {
+            NSError* error;
+            NSDictionary* handlerDic = [NSJSONSerialization JSONObjectWithData:[handlerJsonString dataUsingEncoding:NSUTF8StringEncoding] options:NSJSONReadingMutableContainers error:&error];
+            if(!error) {
+                for (NSString* scheme in handlerDic) {
+                    Class handlerCls = NSClassFromString(handlerDic[scheme]);
+                    if (handlerCls) {
+                        [configuration setURLSchemeHandler:[[handlerCls alloc] init] forURLScheme:scheme];
+                    }
+                }
+            }
+        }
+    }
+    
     return configuration;
 }
 
