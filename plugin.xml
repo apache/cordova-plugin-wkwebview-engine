@@ -61,3 +61,4 @@
         <source-file src="src/ios/CDVWKProcessPoolFactory.m" />
     </platform>
 </plugin>
+tests/plugin.xml
