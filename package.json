@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-wkwebview-engine",
-  "version": "1.2.1-dev",
+  "version": "1.2.2-dev",
   "description": "The official Apache Cordova WKWebView Engine Plugin",
   "main": "index.js",
   "repository": {

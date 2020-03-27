@@ -21,6 +21,13 @@
 
 # Release Notes
 
+### 1.2.1 (Jul 20, 2019)
+
+-   fix: Revert "CB-13987: (ios) Fix WKWebView doesn't layout properly at… ([#107](https://github.com/apache/cordova-plugin-wkwebview-engine/issues/107)) ([`dc8b277`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/dc8b277))
+-   ci(travis): upgrade to node8 ([`d8c8b3f`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/d8c8b3f))
+-   ci(appveyor): replace node 6 with node 12 ([`557e275`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/557e275))
+
+
 ### 1.2.0 (Jun 27, 2019)
 
 -   build: add `.gitattributes` to force LF (instead of possible CRLF on Windows) ([`797f088`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/797f088))
