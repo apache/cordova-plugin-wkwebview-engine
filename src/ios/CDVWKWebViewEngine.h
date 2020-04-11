@@ -23,7 +23,9 @@
 @interface CDVWKWebViewEngine : CDVPlugin <CDVWebViewEngineProtocol, WKScriptMessageHandler, WKNavigationDelegate>
 
 @property (nonatomic, strong, readonly) id <WKUIDelegate> uiDelegate;
+@property (nonatomic, strong) NSString* callbackId;
 
 - (void)allowsBackForwardNavigationGestures:(CDVInvokedUrlCommand*)command;
+- (void)setCookie:(CDVInvokedUrlCommand *)command;
 
 @end

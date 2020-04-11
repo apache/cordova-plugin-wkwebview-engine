@@ -471,6 +471,38 @@ static void * KVOContext = &KVOContext;
     wkWebView.allowsBackForwardNavigationGestures = [value boolValue];
 }
 
+- (void)setCookie:(CDVInvokedUrlCommand *)command {
+    self.callbackId = command.callbackId;
+
+    NSString *domain = command.arguments[0];
+    NSString *path = command.arguments[1];
+    NSString *name = command.arguments[2];
+    NSString *value = command.arguments[3];
+    
+    [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookieAcceptPolicy:NSHTTPCookieAcceptPolicyAlways];
+
+    WKWebView* wkWebView = (WKWebView*)_engineWebView;
+
+    if (@available(iOS 11.0, *)) {
+        NSMutableDictionary *cookieProperties = [NSMutableDictionary dictionary];
+        [cookieProperties setObject:name forKey:NSHTTPCookieName];
+        [cookieProperties setObject:value forKey:NSHTTPCookieValue];
+        [cookieProperties setObject:domain forKey:NSHTTPCookieDomain];
+        [cookieProperties setObject:domain forKey:NSHTTPCookieOriginURL];
+        [cookieProperties setObject:path forKey:NSHTTPCookiePath];
+        NSHTTPCookie * cookie = [NSHTTPCookie cookieWithProperties:cookieProperties];
+
+        [wkWebView.configuration.websiteDataStore.httpCookieStore setCookie:cookie completionHandler:^{NSLog(@"Cookies synced");}];
+        [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookie:cookie];
+
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
+    } else {
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
+    };
+}
+
 @end
 
 #pragma mark - CDVWKWeakScriptMessageHandler
