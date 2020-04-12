@@ -105,6 +105,15 @@ In order to disable preview popups when hard pressing links in iOS, you can set 
 <preference name="Allow3DTouchLinkPreview" value="false" />
 ```
 
+Fix HTTP cookies not saved (iOS >= 11 only)
+--------
+Initial cookie should be set using this command. After this cookie should be stored as expected.
+```js
+document.addEventListener('deviceready', () => {
+  wkWebView.injectCookie('mydomain.com/mypath');
+});
+```
+
 Limitations
 --------
 
