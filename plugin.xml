@@ -30,7 +30,7 @@
     <repo>https://github.com/apache/cordova-plugin-wkwebview-engine</repo>
 
 	<engines>
-        <engine name="cordova-ios" version=">=4.0.0-dev" />
+        <engine name="cordova-ios" version=">=4.0.0 <6.0.0" />
         <engine name="apple-ios" version=">=9.0" />
 	</engines>
 

@@ -31,7 +31,7 @@ In iOS 9, Apple has fixed the [issue](http://www.openradar.me/18039024) present 
 Installation
 -----------
 
-This plugin needs cordova-ios >4.0.0.
+This plugin needs cordova-ios 4.0.0 - 5.x. This plugin is not supported on cordova-ios >6.0.0.
 
 To install the current release:
 
