@@ -65,6 +65,12 @@ WKWebView may not fully launch (the deviceready event may not fire) unless if th
 <preference name="CordovaWebViewEngine" value="CDVWKWebViewEngine" />
 ```
 
+In order to only use the WKWebView (which is required for new Apps to the AppStore), you might have to also include 
+
+```xml
+<preference name="WKWebViewOnly" value="true" />
+```
+
 Notes
 ------
 This plugin creates a shared `WKProcessPool` which ensures the cookie sharing happens correctly across `WKWebView` instances. `CDVWKProcessPoolFactory` class can be used to obtain the shared `WKProcessPool` instance if app creates `WKWebView` outside of this plugin.
