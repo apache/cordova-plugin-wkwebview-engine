@@ -65,7 +65,7 @@ WKWebView may not fully launch (the deviceready event may not fire) unless if th
 <preference name="CordovaWebViewEngine" value="CDVWKWebViewEngine" />
 ```
 
-If using cordova-ios versions >= 5.1.0 you might have to include the following tag in order to only use the WKWebView (which is required for new Apps to the AppStore):
+If using `cordova-ios >= 5.1.0`, it is recommended to include the following `preference` tag to only use the `WKWebView` which is a requirement for new App submissions to the AppStore:
 
 ```xml
 <preference name="WKWebViewOnly" value="true" />
