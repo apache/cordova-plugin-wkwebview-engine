@@ -26,6 +26,11 @@ Cordova WKWebView Engine
 
 This plugin makes `Cordova` use the `WKWebView` component instead of the default `UIWebView` component, and is installable only on a system with the iOS 9.0 SDK.
 
+### Should I use this plugin?
+* if using cordova iOS >=6 this plugin was integrated into the core and is no longer needed [reference - 2020/06/01](https://cordova.apache.org/announcements/2020/06/01/cordova-ios-release-6.0.0.html)
+* if using cordova iOS <6 this plugin is still needed or your app could be rejected [reference - 2020/03/18](https://cordova.apache.org/howto/2020/03/18/wkwebviewonly.html)
+* [historical reason this plugin was needed - 2018/08/01](https://cordova.apache.org/news/2018/08/01/future-cordova-ios-webview.html)
+
 In iOS 9, Apple has fixed the [issue](http://www.openradar.me/18039024) present through iOS 8 where you cannot load locale files using file://, and must resort to using a local webserver. **However, you are still not able to use XHR from the file:// protocol without [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS) enabled on your server.**
 
 Installation
