@@ -17,7 +17,7 @@
  * specific language governing permissions and limitations
  * under the License.
  *
-*/
+ */
 
 /**
  * Creates the exec bridge used to notify the native code of
@@ -35,8 +35,8 @@ function massageArgsJsToNative (args) {
     args.forEach(function (arg, i) {
         if (utils.typeName(arg) === 'ArrayBuffer') {
             ret.push({
-                'CDVType': 'ArrayBuffer',
-                'data': base64.fromArrayBuffer(arg)
+                CDVType: 'ArrayBuffer',
+                data: base64.fromArrayBuffer(arg)
             });
         } else {
             ret.push(arg);
@@ -64,7 +64,7 @@ function massageMessageNativeToJs (message) {
 
 function convertMessageToArgsNativeToJs (message) {
     var args = [];
-    if (!message || !message.hasOwnProperty('CDVType')) {
+    if (!message || !Object.prototype.hasOwnProperty.call(message, 'CDVType')) {
         args.push(message);
     } else if (message.CDVType === 'MultiPart') {
         message.messages.forEach(function (e) {
@@ -99,8 +99,10 @@ var iOSExec = function () {
         // an invalid callbackId and passes it even if no callbacks were given.
         callbackId = 'INVALID';
     } else {
-   	    throw new Error('The old format of this exec call has been removed (deprecated since 2.1). Change to: ' + // eslint-disable-line
-            'cordova.exec(null, null, \'Service\', \'action\', [ arg1, arg2 ]);');
+        throw new Error(
+            'The old format of this exec call has been removed (deprecated since 2.1). Change to: ' + // eslint-disable-line
+                "cordova.exec(null, null, 'Service', 'action', [ arg1, arg2 ]);"
+        );
     }
 
     // If actionArgs is not provided, default to an empty array
@@ -110,8 +112,7 @@ var iOSExec = function () {
     // arguments if given.
     if (successCallback || failCallback) {
         callbackId = service + cordova.callbackId++;
-        cordova.callbacks[callbackId] =
-            {success: successCallback, fail: failCallback};
+        cordova.callbacks[callbackId] = { success: successCallback, fail: failCallback };
     }
 
     actionArgs = massageArgsJsToNative(actionArgs);
@@ -142,8 +143,11 @@ iOSExec.nativeEvalAndFetch = function (func) {
 
 function cordovaExec () {
     var cexec = require('cordova/exec');
-    var cexec_valid = (typeof cexec.nativeFetchMessages === 'function') && (typeof cexec.nativeEvalAndFetch === 'function') && (typeof cexec.nativeCallback === 'function');
-    return (cexec_valid && execProxy !== cexec) ? cexec : iOSExec;
+    var cexec_valid =
+        typeof cexec.nativeFetchMessages === 'function' &&
+        typeof cexec.nativeEvalAndFetch === 'function' &&
+        typeof cexec.nativeCallback === 'function';
+    return cexec_valid && execProxy !== cexec ? cexec : iOSExec;
 }
 
 function execProxy () {
@@ -164,7 +168,12 @@ execProxy.nativeCallback = function () {
 
 module.exports = execProxy;
 
-if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.cordova && window.webkit.messageHandlers.cordova.postMessage) {
+if (
+    window.webkit &&
+    window.webkit.messageHandlers &&
+    window.webkit.messageHandlers.cordova &&
+    window.webkit.messageHandlers.cordova.postMessage
+) {
     // unregister the old bridge
     cordova.define.remove('cordova/exec');
     // redefine bridge to our new bridge
