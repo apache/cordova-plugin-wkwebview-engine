@@ -3,13 +3,8 @@
   "version": "1.2.2-dev",
   "description": "The official Apache Cordova WKWebView Engine Plugin",
   "main": "index.js",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/apache/cordova-plugin-wkwebview-engine"
-  },
-  "bugs": {
-    "url": "https://github.com/apache/cordova-plugin-wkwebview-engine/issues"
-  },
+  "repository": "github:apache/cordova-plugin-wkwebview-engine",
+  "bugs": "https://github.com/apache/cordova-plugin-wkwebview-engine/issues",
   "keywords": [
     "cordova",
     "wkwebview",
