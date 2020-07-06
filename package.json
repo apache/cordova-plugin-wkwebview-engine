@@ -12,10 +12,10 @@
     "ecosystem:cordova"
   ],
   "scripts": {
-    "test": "npm run eslint && npm run objc-tests",
+    "test": "npm run lint && npm run objc-tests",
     "objc-tests": "cd tests/ios && npm test",
     "preobjc-tests": "cd tests/ios && npm install",
-    "eslint": "node_modules/.bin/eslint src"
+    "lint": "eslint ."
   },
   "author": "Apache Software Foundation",
   "license": "Apache-2.0",
@@ -28,12 +28,6 @@
     }
   },
   "devDependencies": {
-    "eslint": "^3.19.0",
-    "eslint-config-semistandard": "^11.0.0",
-    "eslint-config-standard": "^10.2.1",
-    "eslint-plugin-import": "^2.3.0",
-    "eslint-plugin-node": "^5.0.0",
-    "eslint-plugin-promise": "^3.5.0",
-    "eslint-plugin-standard": "^3.0.1"
+    "@cordova/eslint-config": "^3.0.0"
   }
 }
