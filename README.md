@@ -111,6 +111,15 @@ In order to disable preview popups when hard pressing links in iOS, you can set 
 <preference name="Allow3DTouchLinkPreview" value="false" />
 ```
 
+Allowing self-signed certificates
+-----------
+
+In order to allow access to HTTPS resources hosted on a webserver configured with a self-signed certificate, you can set the following preference in your `config.xml`:
+
+```xml
+<preference name="AllowUntrustedCerts" value="true" />
+```
+
 Limitations
 --------
 
