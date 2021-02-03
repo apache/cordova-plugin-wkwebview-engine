@@ -21,6 +21,17 @@
 
 # Release Notes
 
+### 1.2.2 (Feb 02, 2021)
+* chore: adds package-lock file ([#165](https://github.com/apache/cordova-plugin-wkwebview-engine/pull/165))
+* refactor(eslint): use cordova-eslint /w fix ([#164](https://github.com/apache/cordova-plugin-wkwebview-engine/pull/164))
+* chore(npm): use short notation in `package.json` ([#163](https://github.com/apache/cordova-plugin-wkwebview-engine/pull/163))
+* added WKWebViewOnly to `README` ([#161](https://github.com/apache/cordova-plugin-wkwebview-engine/pull/161))
+* Added **iOS** platform version restrictions ([#158](https://github.com/apache/cordova-plugin-wkwebview-engine/pull/158))
+* chore(asf): update git notification settings ([306a0ee](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/306a0eeea63ac69da85b9518b34855e9e618aff4))
+* Update CONTRIBUTING.md ([6c4cd10](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/6c4cd10f087fa95d272307d8fde932628b36f4ac))
+* ci: updates Node.js versions ([#136](https://github.com/apache/cordova-plugin-wkwebview-engine/pull/136))
+* chore(npm): improve ignore list ([#137](https://github.com/apache/cordova-plugin-wkwebview-engine/pull/137))
+
 ### 1.2.1 (Jul 20, 2019)
 
 -   fix: Revert "CB-13987: (ios) Fix WKWebView doesn't layout properly at… ([#107](https://github.com/apache/cordova-plugin-wkwebview-engine/issues/107)) ([`dc8b277`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/dc8b277))
@@ -41,9 +52,9 @@
 -   fix(ios): Bug fix in recent change in iOSExec.nativeCallback ([#78](https://github.com/apache/cordova-plugin-wkwebview-engine/issues/78)) ([`6f468f4`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/6f468f4))
 -   chore(github): Add or update GitHub pull request and issue template ([`76bca66`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/76bca66))
 -   feat(ios): [GH-68](https://github.com/apache/cordova-plugin-wkwebview-engine/issues/68) (ios): Support for disabling 3D Touch link previews ([#69](https://github.com/apache/cordova-plugin-wkwebview-engine/issues/69)) ([`d0bd80a`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/d0bd80a))
--   fix(ios): CB-12815: (ios) Fix bug nativeCallback not executed when app is in background ([#49](https://github.com/apache/cordova-plugin-wkwebview-engine/issues/49)) ([`bf0f236`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/bf0f236))
+-   fix(ios): [CB-12815](https://issues.apache.org/jira/browse/CB-12815) (ios) Fix bug nativeCallback not executed when app is in background ([#49](https://github.com/apache/cordova-plugin-wkwebview-engine/issues/49)) ([`bf0f236`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/bf0f236))
 -   chore: Add cordova-ios in plugin keyword for npm plugin searching ([#47](https://github.com/apache/cordova-plugin-wkwebview-engine/issues/47)) ([`4f8503d`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/4f8503d))
--   fix(ios): CB-13987: (ios) Fix WKWebView doesn't layout properly at launch on iPhone X ([`7684545`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/7684545), [`81eeade`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/81eeade))
+-   fix(ios): [CB-13987](https://issues.apache.org/jira/browse/CB-13987) (ios) Fix WKWebView doesn't layout properly at launch on iPhone X ([`7684545`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/7684545), [`81eeade`](https://github.com/apache/cordova-plugin-wkwebview-engine/commit/81eeade))
 
 
 ### 1.1.4 (Nov 06, 2017)

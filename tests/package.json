@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-wkwebview-engine-tests",
-  "version": "1.2.2-dev",
+  "version": "1.2.2",
   "description": "",
   "cordova": {
     "id": "cordova-plugin-wkwebview-engine-tests",
