@@ -24,6 +24,18 @@ var exec = require('cordova/exec');
 var WkWebKit = {
     allowsBackForwardNavigationGestures: function (allow) {
         exec(null, null, 'CDVWKWebViewEngine', 'allowsBackForwardNavigationGestures', [allow]);
+    },
+    setCookie: function (url, name, value, successCallback, errorCallback) {
+        const urlNoDomain = url.replace(/^https?:\/\//, '');
+        const urlParts = urlNoDomain.split('/');
+        const domain = urlParts.splice(0,1)[0];
+        var path = urlParts.join('/');
+    
+        exec(successCallback, errorCallback, "CDVWKWebViewEngine",
+          "setCookie", [domain, path, name ? name : "foo", value ? value : "bar"]);
+    },
+    injectCookie: function (url, successCallback, errorCallback) {
+        this.setCookie(url, "foo", "bar", successCallback, errorCallback);
     }
 };
 
