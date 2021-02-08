@@ -28,6 +28,12 @@ This plugin makes `Cordova` use the `WKWebView` component instead of the default
 
 In iOS 9, Apple has fixed the [issue](http://www.openradar.me/18039024) present through iOS 8 where you cannot load locale files using file://, and must resort to using a local webserver. **However, you are still not able to use XHR from the file:// protocol without [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS) enabled on your server.**
 
+### Deprecation Notice
+
+This plugin is now deprecated as it's implementation has been moved to `cordova-ios` platform making this plugin redundent. When migrating to `cordova-ios@6`, you should remove this plugin.
+
+This plugin should still work as is on `cordova-ios@5.1.1` for the foreseeable future, however it is recommended to remove this plugin and upgrade to `cordova-ios@6` or later.
+
 Installation
 -----------
 
