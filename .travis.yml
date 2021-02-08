@@ -15,7 +15,7 @@ env:
     - TRAVIS_NODE_VERSION=12
 
 language: node_js
-node_js: 12
+node_js: 14
 
 # yaml anchor/alias: https://medium.com/@tommyvn/travis-yml-dry-with-anchors-8b6a3ac1b027
 
