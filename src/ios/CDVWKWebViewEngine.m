@@ -41,6 +41,7 @@
 @property (nonatomic, strong, readwrite) UIView* engineWebView;
 @property (nonatomic, strong, readwrite) id <WKUIDelegate> uiDelegate;
 @property (nonatomic, weak) id <WKScriptMessageHandler> weakScriptMessageHandler;
+@property (nonatomic, assign) BOOL allowUntrustedCerts;
 
 @end
 
@@ -277,6 +278,7 @@ static void * KVOContext = &KVOContext;
 
     wkWebView.allowsBackForwardNavigationGestures = [settings cordovaBoolSettingForKey:@"AllowBackForwardNavigationGestures" defaultValue:NO];
     wkWebView.allowsLinkPreview = [settings cordovaBoolSettingForKey:@"Allow3DTouchLinkPreview" defaultValue:YES];
+    self.allowUntrustedCerts = [settings cordovaBoolSettingForKey:@"AllowUntrustedCerts" defaultValue:NO];
 }
 
 - (void)updateWithInfo:(NSDictionary*)info
@@ -456,6 +458,22 @@ static void * KVOContext = &KVOContext;
     }
 
     return decisionHandler(NO);
+}
+
+- (void)webView:(WKWebView *)webView didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential *credential))completionHandler {
+
+    SecTrustRef serverTrust = challenge.protectionSpace.serverTrust;
+
+    if (self.allowUntrustedCerts) {
+        NSLog(@"Accepting all certificates");
+        CFDataRef exceptions = SecTrustCopyExceptions (serverTrust);
+        SecTrustSetExceptions (serverTrust, exceptions);
+        CFRelease (exceptions);
+        completionHandler (NSURLSessionAuthChallengeUseCredential, [NSURLCredential credentialForTrust:serverTrust]);
+        return;
+    }
+
+    completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
 }
 
 #pragma mark - Plugin interface
